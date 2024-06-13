@@ -1,8 +1,35 @@
 #!/bin/bash
 
+set -e
+
+while : ; do
+  option="$1"
+  #echo "option is $option"
+  case "$option" in
+  -d)
+      DEBUG=y
+      shift
+      ;;
+  *)
+     break
+     ;;
+  esac
+done
+
 mkdir -p cbuild
 cd cbuild
-cmake ../
+cmake -DCMAKE_BUILD_TYPE=Debug ../
 make
 make tests
 cd ../
+
+
+if [ -n "$DEBUG" ]; then
+  set -x
+
+  cbuild/spp -DTEST_ARG_1 -DTEST_ARG_2  -DTEST_ARG_3 -DTEST_ARG_4 \
+    -DTEST_ARG_5 -DTEST_ARG_6=y -DTEST_ARG_7  -DTEST_ARG_8 -I/home/dev/ \
+    script1.sh script2.sh script3.sh
+
+  set +x
+fi

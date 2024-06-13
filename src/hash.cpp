@@ -1,19 +1,19 @@
 #include "hash.h"
 
 
-std::vector<table_element*> global_hash_table(256);
+std::vector<table_element*> global_hash_table(HASH_TABLE_SIZE);
 
 
 /* Hash function shamelessly copied from 
  * https://cseweb.ucsd.edu/~kube/cls/100/Lectures/lec16/lec16-16.html#pgfId-977548
  */
-size_t get_string_hash(std::string& s)
+hash_type get_string_hash(std::string& s)
 {
-    size_t hashval = 0;
+    hash_type hashval = 0;
     for (auto c: s)
     {
         hashval = (hashval << 4) + c;
-        size_t g = hashval & 0xF0000000;
+        hash_type g = hashval & 0xF0000000;
         if (g != 0)
             hashval ^= g >> 24;
         hashval &= ~g;
@@ -21,17 +21,17 @@ size_t get_string_hash(std::string& s)
     return hashval;
 }
 
-int get_string_index(std::string& s, size_t *h)
+int get_string_index(std::string& s, hash_type *h)
 {
-    size_t tmp = get_string_hash(s);
+    hash_type tmp = get_string_hash(s);
     if (h)
         *h = tmp;
-    return tmp % 256;
+    return tmp % HASH_TABLE_SIZE;
 }
 
 table_element* find_string_in_hash_table(std::string& s)
 {
-    size_t h;
+    hash_type h;
     int index = get_string_index(s, &h);
     table_element* current = global_hash_table[index];
     while (current)
@@ -45,7 +45,7 @@ table_element* find_string_in_hash_table(std::string& s)
 
 void add_string_to_hash_table(std::string& s)
 {
-    size_t hash = get_string_hash(s);
+    hash_type hash = get_string_hash(s);
     int index = get_string_index(s, nullptr);
     
     table_element* elem = new table_element();
@@ -70,7 +70,7 @@ void add_string_to_hash_table(std::string& s)
 
 void remove_string_from_hash_table(std::string& s)
 {
-    size_t hash;
+    hash_type hash;
     int index = get_string_index(s, &hash);
     table_element* prev = global_hash_table[index];
     table_element* current = prev->next;

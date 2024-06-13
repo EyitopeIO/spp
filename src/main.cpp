@@ -1,8 +1,34 @@
 #include <iostream>
-#include "hash.h"
+#include <fstream>
+#include "options.hpp"
+#include "debug.h"
+
+
+static inline void judge_cmdline(char *cmd_line_text)
+{
+    /* Likely a definition */
+    if (cmd_line_text[0] == '-' )
+    {
+        /* Quit to respect command line order. Files should come last */
+        if (global_files)
+            show_usage();
+
+        parse_cmdline_defines(cmd_line_text);
+        return;
+    }
+    if (!parse_cmdline_files(cmd_line_text))
+        std::cerr << "Ignoring " << cmd_line_text << std::endl;
+}
+
 
 int main (int argc, char **argv)
 {
-    std::cout << "spp!" << std::endl;
+    char **argv_local = argv + 1;
+    int argc_local = argc - 1;
+    
+    while (argc_local--)
+        judge_cmdline(*argv_local++);
+
+    dump_hash_table();
     return 0;
 }
