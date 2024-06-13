@@ -65,15 +65,6 @@ void add_string_to_hash_table(std::string& s)
             break;
         current = current->next;
     }
-    /* Sad we have to come all the way before discovering string is aleady
-     * present.
-     */
-    if (current->hash == hash)
-    {
-        delete elem;
-        return;
-    }
-
     current->next = elem;
 }
 

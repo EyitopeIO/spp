@@ -1,7 +1,24 @@
 #include <iostream>
+#include <fstream>
 #include "options.hpp"
+#include "debug.h"
 
-#include <getopt.h>
+
+static inline void judge_cmdline(char *cmd_line_text)
+{
+    /* Likely a definition */
+    if (cmd_line_text[0] == '-' )
+    {
+        /* Quit to respect command line order. Files should come last */
+        if (global_files)
+            show_usage();
+
+        parse_cmdline_defines(cmd_line_text);
+        return;
+    }
+    if (!parse_cmdline_files(cmd_line_text))
+        std::cerr << "Ignoring " << cmd_line_text << std::endl;
+}
 
 
 int main (int argc, char **argv)
@@ -10,10 +27,8 @@ int main (int argc, char **argv)
     int argc_local = argc - 1;
     
     while (argc_local--)
-    {
-        std::cout << *argv_local << std::endl;
-        add_defines_to_hashtable(*argv_local++);
-    }
+        judge_cmdline(*argv_local++);
 
+    dump_hash_table();
     return 0;
 }
