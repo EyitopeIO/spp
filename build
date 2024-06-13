@@ -1,8 +1,18 @@
 #!/bin/bash
 
+set -eu
+
 mkdir -p cbuild
 cd cbuild
 cmake ../
 make
 make tests
 cd ../
+
+if [ "$1" = "r" ]; then
+  set -x
+  cbuild/spp -DTEST_ARG_1 -DTEST_ARG_2 -DTEST_ARG_3=y -DTEST_ARG_4=y \
+
+#    -DTEST_ARG_5="Hello," -DTEST_ARG_6="world!"
+  set +x
+fi

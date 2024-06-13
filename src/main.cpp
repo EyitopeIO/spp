@@ -1,8 +1,19 @@
 #include <iostream>
-#include "hash.h"
+#include "options.hpp"
+
+#include <getopt.h>
+
 
 int main (int argc, char **argv)
 {
-    std::cout << "spp!" << std::endl;
+    char **argv_local = argv + 1;
+    int argc_local = argc - 1;
+    
+    while (argc_local--)
+    {
+        std::cout << *argv_local << std::endl;
+        add_defines_to_hashtable(*argv_local++);
+    }
+
     return 0;
 }
