@@ -1,10 +1,17 @@
+#ifndef HASH_H
+#define HASH_H
+
 #include <cstdlib>
 #include <string>
 #include <vector>
 #include <iostream>
 
+#define HASH_TABLE_SIZE 97
+
+typedef uint64_t hash_type;
+
 struct table_element {
-    size_t hash;
+    hash_type hash;
     std::string text;
     table_element *next;
 };
@@ -16,7 +23,7 @@ extern std::vector<table_element*> global_hash_table;
  * @param s: the string to hash
  * @return: the hash of the string
  */
-size_t get_string_hash(std::string& s);
+hash_type get_string_hash(std::string& s);
 
 /*
  * Function to get the index of a string in the hash table
@@ -24,7 +31,7 @@ size_t get_string_hash(std::string& s);
  * @param h: a pointer to a size_t to store the hash of the string
  * @return: the index of the string in the hash table
  */
-int get_string_index(std::string& s, size_t *h);
+int get_string_index(std::string& s, hash_type *h);
 
 /*
  * Function to add a string to the hash table
@@ -44,3 +51,5 @@ table_element* find_string_in_hash_table(std::string& s);
  * @param s: the string to remove
  */
 void remove_string_from_hash_table(std::string& s);
+
+#endif
