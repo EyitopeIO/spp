@@ -1,6 +1,9 @@
 #include "options.hpp"
 #include <cstring>
 #include <cstdlib>
+#include <fstream>
+
+#include <unistd.h>
 
 char** global_files = nullptr;
 
@@ -40,6 +43,21 @@ bool parse_cmdline_files(char **text)
 {
     if (!global_files) // first file in the list from command line
         global_files = text;
-  
-  return true;
+
+    if (access(*text, R_OK) == -1)
+    {
+        switch(errno)
+        {
+            case EACCES:
+                std::cerr << "Read permissions needed for file " << *text << std::endl;
+                break;
+            case ENOENT:
+                std::cerr << "File " << *text << " does not exist" << std::endl;
+                break;
+            default:
+                std::cerr << "File " << *text << " cannot be read" << std::endl;
+        }
+        exit(EXIT_FAILURE);
+    }
+
 }
