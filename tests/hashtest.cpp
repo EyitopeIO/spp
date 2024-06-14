@@ -20,6 +20,14 @@ namespace
         std::string string1 = "test1";
         std::string string2 = "test2";
         ASSERT_NE(get_string_hash(string1), get_string_hash(string2));
+
+        string1 = "test";
+        string2 = "TEST";
+        ASSERT_NE(get_string_hash(string1), get_string_hash(string2));
+
+        string1 = "test";
+        string2 = "tEst ";
+        ASSERT_NE(get_string_hash(string1), get_string_hash(string2));
     }
 
     /* Test to ensure get_string_index returns an index within expected range */

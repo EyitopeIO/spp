@@ -7,7 +7,7 @@ while : ; do
   #echo "option is $option"
   case "$option" in
   -d)
-      DEBUG=y
+      export DEBUG=y
       shift
       ;;
   *)
@@ -25,11 +25,10 @@ cd ../
 
 
 if [ -n "$DEBUG" ]; then
+  echo
   set -x
-
-  cbuild/spp -DTEST_ARG_1 -DTEST_ARG_2  -DTEST_ARG_3 -DTEST_ARG_4 \
-    -DTEST_ARG_5 -DTEST_ARG_6=y -DTEST_ARG_7  -DTEST_ARG_8 -I/home/dev/ \
+  cbuild/spp -DTEST_ARG_1 -DTEST_ARG_2 -Dlorem_ipsum -Dyacc -I/home/dev/ \
     script1.sh script2.sh script3.sh
-
   set +x
+  echo
 fi
