@@ -2,7 +2,7 @@
 #include <cstring>
 #include <cstdlib>
 
-const char* global_files = nullptr;
+char** global_files = nullptr;
 
 void show_usage(void)
 {
@@ -36,10 +36,9 @@ void parse_cmdline_defines(char *text)
     }
 }
 
-bool parse_cmdline_files(char *text)
+bool parse_cmdline_files(char **text)
 {
-
-    if (!global_files)
+    if (!global_files) // first file in the list from command line
         global_files = text;
   
   return true;
