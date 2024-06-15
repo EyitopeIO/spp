@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -e
+set -Ee
 
 while : ; do
   option="$1"
@@ -8,6 +8,10 @@ while : ; do
   case "$option" in
   -d)
       export DEBUG=y
+      shift
+      ;;
+  -r)
+      export RUNSPP=y
       shift
       ;;
   *)
@@ -24,13 +28,30 @@ make tests
 cd ../
 
 
-if [ -n "$DEBUG" ]; then
-  echo
+if [ -n "$DEBUG" ] || [ -n "$RUNSPP" ]; then
+
+  if [ ! -e cbuild/script1.sh ]; then
+  cat > cbuild/script1.sh <<EOF
+#!/bin/bash
+
+print_startup_message(){
+#-- @ifdef TEST_ARG_0
+  echo "Why, hello there!"
+#-- @elif TEST_ARG_1
+  echo "Welcome back!"
+#-- @else
+  :
+#-- @endif
+#-- @ifdef lorem_ipsum
+  wget CPE_IPADDR/userconfig.yaml
+#-- @endif
+}
+print_startup_message
+EOF
+  fi
 
   set -x
-  cbuild/spp -DTEST_ARG_1 -DTEST_ARG_2 -Dlorem_ipsum -Dyacc -I/home/dev/ \
-    cbuild/script1.sh cbuild/script2.sh
+  cbuild/spp -DTEST_ARG_1 -DTEST_ARG_2 -Dlorem_ipsum -Dyacc cbuild/script1.sh
   set +x
-
-  echo
+  shellcheck cbuild/script1.sh.spp
 fi
