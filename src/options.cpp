@@ -1,11 +1,11 @@
 #include "options.hpp"
+#include "spp.h"
 #include <cstring>
 #include <cstdlib>
-#include <fstream>
 
 #include <unistd.h>
 
-char** global_files = nullptr;
+char** first_file = nullptr;
 
 void show_usage(void)
 {
@@ -39,10 +39,10 @@ void parse_cmdline_defines(char *text)
     }
 }
 
-bool parse_cmdline_files(char **text)
+void parse_cmdline_files(char **text)
 {
-    if (!global_files) // first file in the list from command line
-        global_files = text;
+    if (!first_file) // first file in the list from command line
+        first_file = text;
 
     if (access(*text, R_OK) == -1)
     {
@@ -59,5 +59,5 @@ bool parse_cmdline_files(char **text)
         }
         exit(EXIT_FAILURE);
     }
-
+    preprocess_file(*text);
 }

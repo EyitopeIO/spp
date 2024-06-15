@@ -26,9 +26,11 @@ cd ../
 
 if [ -n "$DEBUG" ]; then
   echo
+
   set -x
   cbuild/spp -DTEST_ARG_1 -DTEST_ARG_2 -Dlorem_ipsum -Dyacc -I/home/dev/ \
-    script1.sh script2.sh script3.sh
+    cbuild/script1.sh cbuild/script2.sh
   set +x
+
   echo
 fi
