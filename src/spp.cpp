@@ -3,6 +3,7 @@
 #include <string>
 #include <cstring>
 #include <cstdio>
+#include <memory>
 
 #define spp_extension ".spp"
 
@@ -58,10 +59,10 @@ void preprocess_file(char *filename)
 
     std::ifstream ifile(filename);
 
-    char *output_filename = new char[std::strlen(filename) + std::strlen(spp_extension) + 1];
-    std::strcpy(output_filename, filename);
-    std::strcat(output_filename, spp_extension);
-    std::ofstream ofile(output_filename);
+    std::unique_ptr<char> output_filename = std::make_unique<char>(std::strlen(filename) + std::strlen(spp_extension) + 1);
+    std::strcpy(output_filename.get(), filename);
+    std::strcat(output_filename.get(), spp_extension);
+    std::ofstream ofile(output_filename.get());
 
     std::string line;
     while (std::getline(ifile, line))
@@ -88,13 +89,7 @@ void preprocess_file(char *filename)
     if (pstate.opened_ifdefs != 0)
     {
         std::cerr << "Error: Unterminated ifdefs on line " << pstate.line_number << std::endl;
-        std::remove(output_filename);
-        /*
-         * Even though the program quits and the memory is released, this
-         * explicit delete is to point out to the developer that memory
-         * must be released in case the logic changes in future.
-         */
-        delete output_filename;
+        std::remove(output_filename.get());
         std:exit(EXIT_FAILURE);
     }
 }
