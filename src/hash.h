@@ -40,6 +40,14 @@ int get_string_index(std::string& s, hash_type *h);
 void add_string_to_hash_table(std::string& s);
 
 /*
+ * Function to check if a string is in the hash table
+ * @param s: the string to check
+ * @return: true if the string is in the hash table, false otherwise
+ */
+bool is_string_in_hash_table(std::string& s);
+
+
+/*
  * Function to find a string in the hash table
  * @param s: the string to find
  * @return: a pointer to the table_element containing the string

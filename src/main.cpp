@@ -1,7 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include "options.hpp"
-#include "debug.h"
+#include "sppdebug.h"
 
 
 static inline void judge_cmdline(char **cmd_line_text)

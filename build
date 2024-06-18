@@ -35,16 +35,11 @@ if [ -n "$DEBUG" ] || [ -n "$RUNSPP" ]; then
 #!/bin/bash
 
 print_startup_message(){
-#-- @ifdef TEST_ARG_0
-  echo "Why, hello there!"
-#-- @elif TEST_ARG_1
-  echo "Welcome back!"
-#-- @else
-  :
-#-- @endif
 #-- @ifdef lorem_ipsum
   wget CPE_IPADDR/userconfig.yaml
 #-- @endif
+  script_name="$0"
+  echo "Exiting $script_name"
 }
 print_startup_message
 EOF

@@ -1,4 +1,5 @@
 #include "spp.h"
+#include "sppdebug.h"
 #include <fstream>
 #include <string>
 #include <cstring>
@@ -8,19 +9,42 @@
 
 #define spp_extension ".spp"
 
-#define token_prefix_len 6
+#define token_prefix_len 5
 #define token_ifdef "@ifdef "
 #define token_elif "@elif "
 #define token_else "@else"  // Note the absence of space in the string
 #define token_endif "@endif"
 
-static bool simplify(std::string& line)
+static int token_len(spp::line_type type)
 {
-    /* Match token with only alphanumerics and without brackets or logical */
-    std::regex activex("^[a-zA-Z0-9]+[:space:]*",std::regex_constants::extended);
-    std::smatch match;
+    switch (type)
+    {
+        case spp::IFDEF:
+            return token_prefix_len + std::strlen(token_ifdef) - 1;
+        case spp::ELIF:
+            return token_prefix_len + std::strlen(token_elif) - 1;
+        case spp::ELSE:
+            return token_prefix_len + std::strlen(token_else) - 1;
+        case spp::ENDIF:
+            return token_prefix_len + std::strlen(token_endif) - 1;
+        default:
+            return -1;
+    }
+}
 
-    return true;
+static bool simplify(std::string& line, spp::line_type ltype)
+{
+    line.erase(0,token_len(ltype));
+
+    /* Match token with only alphanumerics and without brackets or logical */
+    std::regex activex("^[a-zA-Z0-9]+",std::regex_constants::extended);
+    std::smatch matchx;
+    if (std::regex_search(line,matchx,activex))
+    {
+        if (is_string_in_hash_table(line))
+            return true;
+    }
+    return false;
 }
 
 static spp::line_type check_line_type(std::string& line, parse_state& state)
@@ -52,11 +76,13 @@ static spp::verdict judge_line(std::ifstream& reader, std::ofstream& writer,
         pstate.line_number++;
         spp::line_type ltype = check_line_type(line,pstate);
 
+        cerr_debug_print("Line " << pstate.line_number << ": " << line << std::endl);
+
         /* The recursive case */
         if (ltype == spp::line_type::IFDEF)
         {
             pstate.opened_ifdefs++;
-            if (simplify(line))
+            if (simplify(line, ltype))
             {
                 judge_line(reader,writer,pstate,spp::verdict::TRUE);
             }
@@ -72,7 +98,7 @@ static spp::verdict judge_line(std::ifstream& reader, std::ofstream& writer,
         else if (ltype == spp::line_type::ENDIF)
         {
             pstate.opened_ifdefs--;
-            return spp::verdict::DONE;
+            return spp::verdict::SKIP;
         }
 
         /* This is our base case. We are in the innermost block following a

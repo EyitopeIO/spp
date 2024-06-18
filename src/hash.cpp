@@ -87,3 +87,8 @@ void remove_string_from_hash_table(std::string& s)
         current = current->next;
     }
 }
+
+bool is_string_in_hash_table(std::string& s)
+{
+    return find_string_in_hash_table(s) != nullptr;
+}

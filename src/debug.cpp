@@ -1,4 +1,4 @@
-#include "debug.h"
+#include "sppdebug.h"
 #include "hash.h"
 
 #ifdef DEBUG
