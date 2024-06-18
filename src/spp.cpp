@@ -4,88 +4,82 @@
 #include <cstring>
 #include <cstdio>
 #include <memory>
+#include <regex>
 
 #define spp_extension ".spp"
 
 #define token_prefix_len 6
 #define token_ifdef "@ifdef "
 #define token_elif "@elif "
-#define token_else "@else "
-#define token_endif "@endif"    // Note the absence of space in the string
+#define token_else "@else"  // Note the absence of space in the string
+#define token_endif "@endif"
 
-enum verdict
+static spp::verdict simplify(std::string& line)
 {
-    TRUE,   // an expression is on this line and evaluates to true
-    FALSE,  // same as above
-    WRITE,  // write this line to the output file
-    SKIP    // skip this line
-};
+    /* Match token with only alphanumerics and without brackets or logical */
+    std::regex activex("^[a-zA-Z0-9]+[:space:]*",std::regex_constants::extended);
+    std::smatch match;
 
-static bool evaluate_expression(std::string& expression)
-{
-    return true;
+    if (std::regex_search(line,match,activex))
+    {
+        std::cpool(match[0].first,match[0].second);
+    }
+
+
 }
 
-struct parse_state
+static spp::line_type check_line_type(std::string& line, parse_state& state)
 {
-    verdict next_line_verdict;
-    size_t opened_ifdefs;
-    size_t line_number;
-};
-
-static verdict judge_line(std::string& line, parse_state& state)
-{
-
     if (line[0] == '#' && line[1] == '-' && line[2] == '-')
     {
         if (line.find(token_ifdef,2) != std::string::npos)
+        {
             state.opened_ifdefs++;
+            return spp::IFDEF;
+        }
         else if (line.find(token_endif,2) != std::string::npos)
+        {
             state.opened_ifdefs--;
-
-        if (evaluate_expression(line))
-            return TRUE;
+            return spp::ENDIF;
+        }
+        else if (line.find(token_elif,2) != std::string::npos)
+            return spp::ELIF;
+        else if (line.find(token_else,2) != std::string::npos)
+            return spp::ELSE;
+        else
+            std::cerr << "Error: Invalid directive on line " << state.line_number << std::endl;
     }
-    return WRITE;
+    return spp::NORMAL;
+}
+
+
+static spp::verdict judge_line(std::ifstream& reader, std::ofstream& writer,
+                               parse_state& pstate,
+                               spp::verdict upstream_verdict)
+{
+    return spp::verdict::DONE;
 }
 
 void preprocess_file(char *filename)
 {
     parse_state pstate = {
-        .next_line_verdict = WRITE,
         .opened_ifdefs = 0,
         .line_number = 0
     };
 
     std::ifstream ifile(filename);
-
     std::unique_ptr<char> output_filename = std::make_unique<char>(std::strlen(filename) + std::strlen(spp_extension) + 1);
     std::strcpy(output_filename.get(), filename);
     std::strcat(output_filename.get(), spp_extension);
     std::ofstream ofile(output_filename.get());
 
-    std::string line;
-    while (std::getline(ifile, line))
-    {
-        switch(judge_line(line, pstate))
-        {
-            case TRUE:
-                pstate.next_line_verdict = WRITE;
-                break;
-            case FALSE:
-                pstate.next_line_verdict = SKIP;
-                break;
-            case WRITE:
-                ofile << line << std::endl;
-                break;
-            case SKIP:  // also the default case
-                break;
-        }
-        pstate.line_number++;
-    }
+    spp::verdict final_verdict = spp::verdict::WRITE;
+
+    while (final_verdict != spp::verdict::DONE)
+        final_verdict = judge_line(ifile,ofile,pstate,final_verdict);
+
     ifile.close();
     ofile.close();
-
     if (pstate.opened_ifdefs != 0)
     {
         std::cerr << "Error: Unterminated ifdefs on line " << pstate.line_number << std::endl;
