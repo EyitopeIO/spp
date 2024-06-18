@@ -52,71 +52,130 @@ static spp::line_type check_line_type(std::string& line, parse_state& state)
     if (line[0] == '#' && line[1] == '-' && line[2] == '-')
     {
         if (line.find(token_ifdef,2) != std::string::npos)
-            return spp::IFDEF;
+            return spp::line_type::IFDEF;
         else if (line.find(token_endif,2) != std::string::npos)
-            return spp::ENDIF;
+            return spp::line_type::ENDIF;
         else if (line.find(token_elif,2) != std::string::npos)
-            return spp::ELIF;
+            return spp::line_type::ELIF;
         else if (line.find(token_else,2) != std::string::npos)
-            return spp::ELSE;
+            return spp::line_type::ELSE;
         else
             std::cerr << "Error: Invalid directive on line " << state.line_number << std::endl;
     }
-    return spp::NORMAL;
+    return spp::line_type::NORMAL;
 }
 
 
-static spp::verdict judge_line(std::ifstream& reader, std::ofstream& writer,
-                               parse_state& pstate,
-                               spp::verdict upstream_verdict)
+static judge_ruling judge_line(std::ifstream& reader, std::ofstream& writer,
+                               parse_state& pstate)
 {
+
+
+    /*
+        This will depict what this function is doing. Each vertical "slash"
+        represents a line. We read each line of the file once from top to
+        bottom. We do not want to pass through the file twice or generate any
+        parse tree or whatnot.
+
+        The important thing to note is that the reader and writer file stream
+        always refers to the same location in the file, no matter how deep the
+        recursive call stack may be. So from the view of the outermost (i.e.
+        letter A in square brackets) ifdef, when the recursive call to
+        `judge_line` returns, the writer would be at point B, even though it
+        has only gone through the loop once i.e. when the writer was at A.
+
+
+    ______________________________________________________
+    | <first line of file here>
+    |
+    |
+    |   <-- ifdef [A]
+    |
+    |
+    |               |   <-- ifdef
+    |               |
+    |               |
+    |               |               |   <-- ifdef
+    |               |               |
+    |               |               |
+    |               |               |   <-- elif
+    |               |               |
+    |               |               |   <-- else
+    |               |               |
+    |               |               |   <-- endif
+    |               |   <-- endif
+    |
+    |
+    |  <-- endif [B]
+    |
+    |
+    | <last line of file here>
+    |____________________________________________________
+    */
+
+
+    judge_ruling j = {
+        .v = spp::verdict::WRITE,
+        .l = spp::line_type::NORMAL,
+    };
+
     std::string line;
     while (std::getline(reader,line))
     {
         pstate.line_number++;
-        spp::line_type ltype = check_line_type(line,pstate);
-
-        cerr_debug_print("Line " << pstate.line_number << ": " << line << std::endl);
+        j.l = check_line_type(line,pstate);
+        cerr_debug_print("Line [A] " << pstate.line_number << ": type " << j.l << ": " << line << std::endl);
 
         /* The recursive case */
-        if (ltype == spp::line_type::IFDEF)
+        if (j.l == spp::line_type::IFDEF)
         {
             pstate.opened_ifdefs++;
-            if (simplify(line, ltype))
+
+            if (simplify(line, j.l))
             {
-                judge_line(reader,writer,pstate,spp::verdict::TRUE);
+                /* Return value ignored because as discussed above, the recursive
+                   calls use the same reference to the reader and writer file, so
+                   decisions to read or write would have been made, and there is
+                   no need to overwrite what the previous call thought its line to
+                   be */
+                judge_line(reader,writer,pstate);
             }
+            else {
+                j.v = spp::verdict::SKIP;
+            }
+            cerr_debug_print("Line [B] " << pstate.line_number << ": verdict " << j.v << ": " << line << std::endl);
         }
 
         /* To be defined */
-        else if (ltype == spp::line_type::ELSE || ltype == spp::line_type::ELIF)
+        else if (j.l == spp::line_type::ELSE || j.l == spp::line_type::ELIF)
         {
 
         }
 
-        /* The terminating case */
-        else if (ltype == spp::line_type::ENDIF)
+        /* The terminating case i.e. we have reached the innermost endif */
+        else if (j.l == spp::line_type::ENDIF)
         {
             pstate.opened_ifdefs--;
-            return spp::verdict::SKIP;
+            j.v = spp::verdict::SKIP;
+            return j;
         }
 
-        /* This is our base case. We are in the innermost block following a
-         * previous evaluation
+        else
+        {
+            j.l = spp::line_type::NORMAL;
+        }
+
+        cerr_debug_print("Line [C] " << pstate.line_number << ": verdict " << j.v << ": " << line << std::endl);
+
+        /* This is the base case. We are in the innermost ifdef and make
+         * our decision to write a line or not. Online normal lines should be
+         * written anyway
          */
-        else if (ltype == spp::line_type::NORMAL) {
-
-            /* This is the base case. We are in the innermost ifdef and make
-            * our decision to write a line or not */
+        if (j.v == spp::verdict::WRITE && j.l == spp::line_type::NORMAL)
             writer << line << std::endl;
-        }
-        else {
-            std::cerr << "What sort of line is line " << pstate.line_number << " ?" << std::endl;
-            std::exit(EXIT_FAILURE);
-        }
     }
-
-    return spp::DONE;
+    j.v = spp::verdict::DONE;
+    return j;
 }
 
 void preprocess_file(char *filename)
@@ -132,10 +191,13 @@ void preprocess_file(char *filename)
     std::strcat(output_filename.get(), spp_extension);
     std::ofstream ofile(output_filename.get());
 
-    spp::verdict final_verdict = spp::verdict::WRITE;
+    judge_ruling final_verdict = {
+        spp::verdict::WRITE,
+        spp::line_type::NORMAL
+    };
 
-    while (final_verdict != spp::verdict::DONE)
-        final_verdict = judge_line(ifile,ofile,pstate,final_verdict);
+    while (final_verdict.v != spp::verdict::DONE)
+        final_verdict = judge_line(ifile,ofile,pstate);
 
     ifile.close();
     ofile.close();

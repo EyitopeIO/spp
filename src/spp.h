@@ -32,5 +32,10 @@ struct parse_state
     size_t line_number;
 };
 
+struct judge_ruling
+{
+    spp::verdict v;
+    spp::line_type l;
+};
 
 #endif // SPP_H

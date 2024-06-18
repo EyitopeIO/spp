@@ -6,7 +6,7 @@
 #include <vector>
 #include <iostream>
 
-#define HASH_TABLE_SIZE 97
+#define HASH_TABLE_SIZE 31
 
 typedef uint64_t hash_type;
 
