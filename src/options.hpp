@@ -3,10 +3,10 @@
 
 #include "hash.h"
 
-extern char** global_files;
+extern char** first_file;
 
 void show_usage(void);
 void parse_cmdline_defines(char *text);
-bool parse_cmdline_files(char **text);
+void parse_cmdline_files(char **text);
 
 #endif

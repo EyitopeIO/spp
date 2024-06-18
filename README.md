@@ -14,20 +14,19 @@ spp to find what you intend to substitute.
 
 
 ```
-#!/bin/sh
-
-#-- @include <config.h>
-
-IP_ADDRESS=CPE_IPADDR
+#!/bin/bash
 
 print_startup_message(){
-#-- @ifdef USER_FIRSTBOOT
+#-- @ifdef TEST_ARG_0
   echo "Why, hello there!"
-#-- @elif USER_RETURN
+#-- @elif TEST_ARG_1
   echo "Welcome back!"
 #-- @else
-  : 
+  :
 #-- @endif
+#-- @ifdef lorem_ipsum
   wget CPE_IPADDR/userconfig.yaml
+#-- @endif
 }
+print_startup_message
 ```
