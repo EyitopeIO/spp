@@ -4,8 +4,6 @@
 #ifdef DEBUG
 void dump_hash_table()
 {
-    table_element *csr;
-
     for (int i = 0; i < global_hash_table.size(); i++)
     {
         std::cout << "----------------" << std::endl;

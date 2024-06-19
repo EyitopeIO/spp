@@ -186,10 +186,8 @@ void preprocess_file(char *filename)
     };
 
     std::ifstream ifile(filename);
-    std::unique_ptr<char> output_filename = std::make_unique<char>(std::strlen(filename) + std::strlen(spp_extension) + 1);
-    std::strcpy(output_filename.get(), filename);
-    std::strcat(output_filename.get(), spp_extension);
-    std::ofstream ofile(output_filename.get());
+    std::string output_filename = std::string(filename) + spp_extension;
+    std::ofstream ofile(output_filename);
 
     judge_ruling final_verdict = {
         spp::verdict::WRITE,
@@ -204,7 +202,7 @@ void preprocess_file(char *filename)
     if (pstate.opened_ifdefs != 0)
     {
         std::cerr << "Error: Unterminated ifdefs on line " << pstate.line_number << std::endl;
-        std::remove(output_filename.get());
-        std:exit(EXIT_FAILURE);
+        std::remove(output_filename.c_str());
+        std::exit(EXIT_FAILURE);
     }
 }
