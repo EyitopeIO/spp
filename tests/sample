@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# This file is processed with varying conditions and tested to be a valid
+# shell file after processing
+
+#-- @ifdef PRINT_START_DATE
+echo "$(date)"
+#-- @endif
+
+#-- @ifdef TEST_BEGIN_FUNCTION
+sayHello(){
+    echo
+    echo "Why, hello there!"
+    echo
+}
+#-- @endif
+
+#-- @ifdef TEST_DELAY_5
+sleep 5
+#-- @endif
+echo "Continuing..."
+
+#-- @ifdef PRODUCTION
+wget 88.13.1.45:329/production.tar
+#-- @elif DEBUG
+wget 88.13.2.45:329/debug.tar
+#-- @endif
+#-- @ifdef lorem_ipsum
+echo "Bye!"
+#-- @endif
+# This is the last line.

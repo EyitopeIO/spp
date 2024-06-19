@@ -9,6 +9,7 @@ file(GLOB_RECURSE SOURCES "src/*.cpp" "src/*.c")
 add_executable(spp ${SOURCES})
 if(DEFINED ENV{DEBUG})
   target_compile_definitions(spp PUBLIC -DDEBUG)
+  target_compile_options(spp PUBLIC -g -O0 -Wall)
 endif()
 add_subdirectory(tests)
 

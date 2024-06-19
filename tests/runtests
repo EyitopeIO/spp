@@ -1,0 +1,79 @@
+#!/bin/sh
+
+set -Ee
+
+builddir="$(realpath cbuild)"
+spp="$(realpath cbuild/spp)"
+testdir="$(realpath tests)"
+
+
+ntests=2    # Total number of tests in this file
+
+cd tests
+
+
+getFileHash(){
+    printf "$(md5sum $1 | cut -f1 -d' ')"
+}
+
+verifyEqual(){
+    if [ "$(getFileHash $1)" = "$(getFileHash $2)" ];then
+        return 0
+    fi
+    return 1
+}
+
+getTestArg(){
+    printf "$sampleargs" | grep "$1>" | cut -d' ' -f2-
+}
+
+
+############################################################
+
+sampleargs="\
+1> -Dlorem_ipsum -DTEST_DELAY_1\n\
+2> -Dlorem_ipsum -DTEST_DELAY_5\n\
+"
+
+############################################################
+
+
+cat > $builddir/sample.1 <<EOF
+#!/bin/bash
+
+# This file is processed with varying conditions and tested to be a valid
+# shell file after processing
+
+
+
+echo "Continuing..."
+
+echo "Bye!"
+# This is the last line.
+EOF
+
+cat > $builddir/sample.2 <<EOF
+#!/bin/bash
+
+# This file is processed with varying conditions and tested to be a valid
+# shell file after processing
+
+
+
+sleep 5
+echo "Continuing..."
+
+echo "Bye!"
+# This is the last line.
+EOF
+############################################################
+
+for n in $(seq 1 $ntests)
+do
+    $spp $(getTestArg $n) $testdir/sample
+    if verifyEqual $builddir/sample.$n $testdir/sample.spp ; then
+        echo "[OK] Test $n"
+    else
+        echo "[FAIL] Fail $n"
+    fi
+done

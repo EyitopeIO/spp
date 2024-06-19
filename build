@@ -10,8 +10,8 @@ while : ; do
       export DEBUG=y
       shift
       ;;
-  -r)
-      export RUNSPP=y
+  -t)
+      DO_TESTS=y
       shift
       ;;
   *)
@@ -24,34 +24,9 @@ mkdir -p cbuild
 cd cbuild
 cmake -DCMAKE_BUILD_TYPE=Debug ../
 make
-make tests
 cd ../
 
-
-if [ -n "$DEBUG" ] || [ -n "$RUNSPP" ]; then
-
-  if [ ! -e cbuild/script1.sh ]; then
-  cat > cbuild/script1.sh <<EOF
-#!/bin/bash
-
-print_startup_message(){
-  echo "start: $(date)"
-#-- @ifdef lorem_ipsum
-  test -e cbuild/script.sh && echo yes
-#-- @endif
-  wget 192.168.3.1/userconfig.yaml
-#-- @ifdef SHOW_SCRIPT_NAME
-  script_name="$0"
-#-- @endif
-  echo "Exiting $script_name"
-}
-
-print_startup_message
-EOF
-  fi
-
-  set -x
-  cbuild/spp -DTEST_ARG_1 -Dlorem_ipsum -Dyacc cbuild/script1.sh
-  set +x
-  shellcheck cbuild/script1.sh.spp
+if [ -n "$DO_TESTS" ]; then
+  make tests
+  tests/runtests
 fi
