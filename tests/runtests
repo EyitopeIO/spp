@@ -7,7 +7,7 @@ spp="$(realpath cbuild/spp)"
 testdir="$(realpath tests)"
 
 
-ntests=2    # Total number of tests in this file
+ntests=4    # Total number of tests in this file
 
 cd tests
 
@@ -34,56 +34,76 @@ getTestArg(){
 ############################################################
 
 sampleargs="\
-1> -Dlorem_ipsum -DTEST_DELAY_1\n\
-2> -Dlorem_ipsum -DTEST_DELAY_5\n\
+1> -Dlorem_ipsum -DTEST_DELAY_1 -DTEST_DELAY_2 -DTEST_DELAY_3 -DTEST_DELAY_6\n\
+2> -Dlorem_ipsum -DTEST_DELAY_5 -DRhesus_factor\n\
+3> -DDEBUG -DJESUS_CHRIST -DTEST_BEGIN_FUNCTION\n\
+4> -DPRODUCTION -Dpharetra_proin -DNIGERIA -DCOTEDIVOIRE\n\
 "
 
-############################################################
-
-
+###########################################################
 cat > $builddir/sample.1 <<EOF
 #!/bin/bash
 
-# This file is processed with varying conditions and tested to be a valid
-# shell file after processing
-
-
+# This file is processed with varying conditions
 
 echo "Continuing..."
-
 echo "Bye!"
 # This is the last line.
 EOF
-
+###########################################################
 cat > $builddir/sample.2 <<EOF
 #!/bin/bash
 
-# This file is processed with varying conditions and tested to be a valid
-# shell file after processing
-
-
+# This file is processed with varying conditions
 
 sleep 5
 echo "Continuing..."
-
 echo "Bye!"
 # This is the last line.
 EOF
-############################################################
+###########################################################
+cat > $builddir/sample.3 <<EOF
+#!/bin/bash
 
-echo "Testing generated file content..."
-for n in $(seq 1 $ntests)
+# This file is processed with varying conditions
+sayHello(){
+    echo
+    echo "Why, hello there!"
+    echo
+}
+
+echo "Continuing..."
+wget 88.13.2.45:329/debug.tar
+echo "See you later!"
+# This is the last line.
+EOF
+##########################################################
+cat > $builddir/sample.4 <<EOF
+#!/bin/bash
+
+# This file is processed with varying conditions
+
+echo "Continuing..."
+wget 88.13.1.45:329/production.tar
+echo "Talk to you soon!"
+# This is the last line.
+EOF
+#########################################################
+
+
+echo
+for n in $(seq $ntests -1 1)
 do
-    $spp $(getTestArg $n) $testdir/sample
+    aggs="$(getTestArg $n)"
+    echo "Test sample.$n --> $aggs"
+    $spp $aggs $testdir/sample
     if verifyEqual $builddir/sample.$n $testdir/sample.spp ; then
-        echo "[OK] sample.$n"
+        printf "[OK]\n\n"
     else
-        echo "[FAIL] sample.$n"
-	echo
-	echo "***  Diff between expected and generated ***"
-	echo
-	diff $builddir/sample.$n $testdir/sample.spp
-	echo
-	echo _____________________________________________
+        echo "[FAIL]"
+        echo
+        diff -y $builddir/sample.$n $testdir/sample.spp || true
+        echo _____________________________________________
+        false
     fi
 done

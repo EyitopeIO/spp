@@ -36,6 +36,7 @@ struct judge_ruling
 {
     spp::verdict v;
     spp::line_type l;
+    bool see_next_block;
 };
 
 #endif // SPP_H

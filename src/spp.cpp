@@ -42,7 +42,10 @@ static bool simplify(std::string& line, spp::line_type ltype)
     if (std::regex_search(line,matchx,activex))
     {
         if (is_string_in_hash_table(line))
+        {
+            cerr_debug_print("Eval [True] " << line << std::endl);
             return true;
+        }
     }
     return false;
 }
@@ -117,6 +120,7 @@ static judge_ruling judge_line(std::ifstream& reader, std::ofstream& writer,
     judge_ruling j = {
         .v = spp::verdict::WRITE,
         .l = spp::line_type::NORMAL,
+        .see_next_block = false
     };
 
     std::string line;
@@ -139,17 +143,43 @@ static judge_ruling judge_line(std::ifstream& reader, std::ofstream& writer,
                    no need to overwrite what the previous call thought its line to
                    be */
                 judge_line(reader,writer,pstate);
+
+                j.see_next_block = false;
             }
-            else {
+            else
+            {
                 j.v = spp::verdict::SKIP;
+                j.see_next_block = true;
             }
             cerr_debug_print("Line [B] " << pstate.line_number << ": verdict " << j.v << ": " << line << std::endl);
         }
 
-        /* To be defined */
-        else if (j.l == spp::line_type::ELSE || j.l == spp::line_type::ELIF)
+        /* Beware that in the else-if and else blocks, setting the verdict to
+         * SKIP is not logically equivalent to returning to the next iteration
+         * (i.e. `continue' statement) of the main loop.
+         */
+        else if (j.l == spp::line_type::ELIF)
         {
+            if (j.see_next_block && simplify(line, j.l))
+            {
+                j.see_next_block = false;
+                j.v = spp::verdict::WRITE;
+            }
+            else {
+                j.v = spp::verdict::SKIP;
+            }
+        }
 
+        else if ( j.l == spp::line_type::ELSE)
+        {
+            if (j.see_next_block)
+            {
+                j.see_next_block = false;
+                j.v = spp::verdict::WRITE;
+            }
+            else {
+                j.v = spp::verdict::SKIP;
+            }
         }
 
         /* The terminating case i.e. we have reached the innermost endif */
@@ -157,11 +187,11 @@ static judge_ruling judge_line(std::ifstream& reader, std::ofstream& writer,
         {
             pstate.opened_ifdefs--;
             j.v = spp::verdict::SKIP;
+            j.see_next_block = false;
             return j;
         }
 
-        else
-        {
+        else {
             j.l = spp::line_type::NORMAL;
         }
 
