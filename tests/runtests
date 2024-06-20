@@ -11,6 +11,9 @@ ntests=2    # Total number of tests in this file
 
 cd tests
 
+# Run testing framework
+$builddir/tests/sppTests
+
 
 getFileHash(){
     printf "$(md5sum $1 | cut -f1 -d' ')"
@@ -68,12 +71,19 @@ echo "Bye!"
 EOF
 ############################################################
 
+echo "Testing generated file content..."
 for n in $(seq 1 $ntests)
 do
     $spp $(getTestArg $n) $testdir/sample
     if verifyEqual $builddir/sample.$n $testdir/sample.spp ; then
-        echo "[OK] Test $n"
+        echo "[OK] sample.$n"
     else
-        echo "[FAIL] Fail $n"
+        echo "[FAIL] sample.$n"
+	echo
+	echo "***  Diff between expected and generated ***"
+	echo
+	diff $builddir/sample.$n $testdir/sample.spp
+	echo
+	echo _____________________________________________
     fi
 done
