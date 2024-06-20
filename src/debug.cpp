@@ -4,7 +4,7 @@
 #ifdef DEBUG
 void dump_hash_table()
 {
-    for (int i = 0; i < global_hash_table.size(); i++)
+    for (size_t i = 0; i < global_hash_table.size(); i++)
     {
         std::cout << "----------------" << std::endl;
         std::cout << "Index: " << i << std::endl;
