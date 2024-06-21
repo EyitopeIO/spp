@@ -128,7 +128,7 @@ static judge_ruling judge_line(std::ifstream& reader, std::ofstream& writer,
     {
         pstate.line_number++;
         j.l = check_line_type(line,pstate);
-        cerr_debug_print("Line [A] " << pstate.line_number << ": type " << j.l << ": " << line << std::endl);
+        cerr_debug_print("Line [read] " << pstate.line_number << ": type " << print_line_type(j.l) << ": " << line << std::endl);
 
         /* The recursive case */
         if (j.l == spp::line_type::IFDEF)
@@ -143,20 +143,14 @@ static judge_ruling judge_line(std::ifstream& reader, std::ofstream& writer,
                    no need to overwrite what the previous call thought its line to
                    be */
                 j = judge_line(reader,writer,pstate);
-                
-                if (j.v == spp::verdict::SKIP)
-                {
-                    /* Reset to normal. It will be redefined in next iteration */
-                    j.l = spp::line_type::NORMAL;
-                }
                 j.see_next_block = false;
+                cerr_debug_print("Line [judged] " << pstate.line_number << ": verdict " << print_verdict(j.v) << ": " << line << std::endl);
             }
             else
             {
                 j.v = spp::verdict::SKIP;
                 j.see_next_block = true;
             }
-            cerr_debug_print("Line [B] " << pstate.line_number << ": verdict " << j.v << ": " << line << std::endl);
         }
 
         /* Beware that in the else-if and else blocks, setting the verdict to
@@ -200,7 +194,7 @@ static judge_ruling judge_line(std::ifstream& reader, std::ofstream& writer,
             j.l = spp::line_type::NORMAL;
         }
 
-        cerr_debug_print("Line [C] " << pstate.line_number << ": verdict " << j.v << ": " << line << std::endl);
+        cerr_debug_print("Line [write] " << pstate.line_number << ": verdict " << print_verdict(j.v) << ": " << line << std::endl);
 
         /* This is the base case. We are in the innermost ifdef and make
          * our decision to write a line or not. Online normal lines should be
