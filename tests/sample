@@ -20,6 +20,9 @@ echo "Continuing..."
 wget 88.13.1.45:329/production.tar
 #-- @elif DEBUG
 wget 88.13.2.45:329/debug.tar
+#-- @ifdef TEST_DELAY_2
+sleep 2
+#-- @endif
 #-- @endif
 #-- @ifdef lorem_ipsum
 echo "Bye!"

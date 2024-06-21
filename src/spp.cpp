@@ -142,8 +142,13 @@ static judge_ruling judge_line(std::ifstream& reader, std::ofstream& writer,
                    decisions to read or write would have been made, and there is
                    no need to overwrite what the previous call thought its line to
                    be */
-                judge_line(reader,writer,pstate);
-
+                j = judge_line(reader,writer,pstate);
+                
+                if (j.v == spp::verdict::SKIP)
+                {
+                    /* Reset to normal. It will be redefined in next iteration */
+                    j.l = spp::line_type::NORMAL;
+                }
                 j.see_next_block = false;
             }
             else
