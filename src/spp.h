@@ -24,7 +24,15 @@ namespace spp
         ENDIF,
         NORMAL,
     };
+
+    enum blockwrite
+    {
+        ELIF_WRITE,
+        ELIF_SKIP,
+        ELIF_STOP,
+    };
 }
+
 
 struct parse_state
 {

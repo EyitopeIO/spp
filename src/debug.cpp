@@ -57,8 +57,24 @@ std::string print_verdict(spp::verdict v)
     }
 }
 
+std::string print_blockwrite(spp::blockwrite b)
+{
+    switch (b)
+    {
+        case spp::blockwrite::ELIF_SKIP:
+            return "ELIF_SKIP";
+        case spp::blockwrite::ELIF_WRITE:
+            return "ELIF_WRITE";
+        case spp::blockwrite::ELIF_STOP:
+            return "ELIF_STOP";
+        default:
+            return "UNKNOWN";
+    }
+}
+
 #else
 void dump_hash_table() {}
 std::string print_line_type(spp::line_type t) { return "";}
 std::string print_verdict(spp::verdict v) { return "";}
+std::string print_blockwrite(spp::blockwrite b) { return "";}
 #endif

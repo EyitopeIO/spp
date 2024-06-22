@@ -7,6 +7,7 @@ extern char global_file;
 void dump_hash_table();
 std::string print_line_type(spp::line_type t);
 std::string print_verdict(spp::verdict v);
+std::string print_blockwrite(spp::blockwrite b);
 
 #if defined(_DEBUG) || defined(DEBUG)
 #define cerr_debug_print(x) std::cerr << x << std::endl

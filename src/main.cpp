@@ -31,6 +31,6 @@ int main (int argc, char **argv)
                         << std::endl);
         judge_cmdline(argv_local++);
     }
-    dump_hash_table();
+    // dump_hash_table();
     return 0;
 }

@@ -34,10 +34,11 @@ getTestArg(){
 ############################################################
 
 sampleargs="\
-1> -Dlorem_ipsum -DTEST_DELAY_1 -DTEST_DELAY_2 -DTEST_DELAY_3 -DTEST_DELAY_6\n\
+1> -Dlorem_ipsum -DTEST_DELAY_1 -DTEST_DELAY_3 -DTEST_DELAY_6\n\
 2> -Dlorem_ipsum -DTEST_DELAY_5 -DRhesus_factor\n\
 3> -DDEBUG -DJESUS_CHRIST -DTEST_DELAY_2 -DTEST_BEGIN_FUNCTION\n\
 4> -DPRODUCTION -Dpharetra_proin -DNIGERIA -DCOTEDIVOIRE\n\
+5> -DMID_ARG -Dpharetra_proin \
 "
 
 ###########################################################
@@ -90,21 +91,32 @@ echo "Talk to you soon!"
 # This is the last line.
 EOF
 #########################################################
+cat > $builddir/sample.5 <<EOF
+#!/bin/bash
 
+# This file is processed with varying conditions
+
+echo "Continuing..."
+echo "Talk to you soon!"
+echo "Mid arg!"
+# This is the last line.
+EOF
+#########################################################
 
 echo
 for n in $(seq $ntests -1 1)
 do
     aggs="$(getTestArg $n)"
-    echo "Test sample.$n --> $aggs"
     $spp $aggs $testdir/sample
+    echo "Test sample.$n --> $aggs"
     if verifyEqual $builddir/sample.$n $testdir/sample.spp ; then
         printf "[OK]\n\n"
     else
         echo "[FAIL]"
         echo
         diff -y $builddir/sample.$n $testdir/sample.spp || true
-        echo _____________________________________________
+        echo _________________________________________________
+        cat $testdir/sample.spp
         false
     fi
 done
