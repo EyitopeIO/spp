@@ -35,9 +35,9 @@ getTestArg(){
 
 sampleargs="\
 1> -Dlorem_ipsum -DTEST_DELAY_1 -DTEST_DELAY_3 -DTEST_DELAY_6\n\
-2> -Dlorem_ipsum -DTEST_DELAY_5 -DRhesus_factor\n\
+2> -DDEBUG -Dpharetra_proin -DRhesus_factor -DUNDEFINED_FOR_ALL_4\n\
 3> -DDEBUG -DJESUS_CHRIST -DTEST_DELAY_2 -DTEST_BEGIN_FUNCTION\n\
-4> -DPRODUCTION -Dpharetra_proin -DNIGERIA -DCOTEDIVOIRE\n\
+4> -DPRODUCTION -Dlorem_ipsum -DNIGERIA -DCOTEDIVOIRE\n\
 5> -DMID_ARG -Dpharetra_proin \
 "
 
@@ -47,6 +47,7 @@ cat > $builddir/sample.1 <<EOF
 
 # This file is processed with varying conditions
 
+sleep 5
 echo "Continuing..."
 echo "Bye!"
 # This is the last line.
@@ -59,7 +60,8 @@ cat > $builddir/sample.2 <<EOF
 
 sleep 5
 echo "Continuing..."
-echo "Bye!"
+wget 88.13.2.45:329/debug.tar
+echo "Talk to you soon!"
 # This is the last line.
 EOF
 ###########################################################
@@ -75,7 +77,6 @@ sayHello(){
 
 echo "Continuing..."
 wget 88.13.2.45:329/debug.tar
-sleep 2
 echo "See you later!"
 # This is the last line.
 EOF
@@ -87,7 +88,7 @@ cat > $builddir/sample.4 <<EOF
 
 echo "Continuing..."
 wget 88.13.1.45:329/production.tar
-echo "Talk to you soon!"
+echo "Bye!"
 # This is the last line.
 EOF
 #########################################################

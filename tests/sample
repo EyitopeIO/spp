@@ -20,63 +20,12 @@ echo "Continuing..."
 wget 88.13.1.45:329/production.tar
 #-- @elif DEBUG
 wget 88.13.2.45:329/debug.tar
-#-- @ifdef TEST_DELAY_2
-sleep 2
-#-- @endif
 #-- @endif
 #-- @ifdef lorem_ipsum
 echo "Bye!"
 #-- @elif pharetra_proin
 echo "Talk to you soon!"
-#-- @ifdef MID_ARG
-echo "Mid arg!"
-#-- @endif
 #-- @else
 echo "See you later!"
-#-- @ifdef UNDEFINED_FOR_ALL
-echo "Undefined for all 1"
-echo "Undefined for all 1"
-echo "Undefined for all 1"
-echo "Undefined for all 1"
-echo "Undefined for all 1"
-echo "Undefined for all 1"
-
-#-- @ifdef UNDEFINED_FOR_ALL_2
-
-echo "Undefined for all 2"
-echo "Undefined for all 2"
-echo "Undefined for all 2"
-echo "Undefined for all 2"
-
-#-- @ifdef UNDEFINED_FOR_ALL_3
-echo "Undefined for all 3"
-echo "Undefined for all 3"
-echo "Undefined for all 3"
-
-#-- @elif UNDEFINED_FOR_ALL_4
-echo "Undefined for all 4"
-echo "Undefined for all 4"
-echo "Undefined for all 4"
-echo "Undefined for all 4"
-echo "Undefined for all 4"
-echo "Undefined for all 4"
-#-- @endif 3
-
-echo "Undefined for all 2"
-echo "Undefined for all 2"
-echo "Undefined for all 2"
-echo "Undefined for all 2"
-echo "Undefined for all 2"
-
-#-- @endif The rest of this line is ignored
-echo "Undefined for all 1"
-echo "Undefined for all 1"
-echo "Undefined for all 1"
-echo "Undefined for all 1"
-echo "Undefined for all 1"
-echo "Undefined for all 1"
-echo "Undefined for all 1"
-echo "Undefined for all 1"
-#-- @endif 1
-#-- @endif
+#-- @endif lorem_ipsum
 # This is the last line.

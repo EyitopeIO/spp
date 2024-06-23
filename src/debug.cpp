@@ -38,35 +38,18 @@ std::string print_line_type(spp::line_type t)
     }
 }
 
-std::string print_verdict(spp::verdict v)
-{
-    switch (v)
-    {
-        case spp::verdict::TRUE:
-            return "TRUE";
-        case spp::verdict::FALSE:
-            return "FALSE";
-        case spp::verdict::WRITE:
-            return "WRITE";
-        case spp::verdict::SKIP:
-            return "SKIP";
-        case spp::verdict::DONE:
-            return "DONE";
-        default:
-            return "UNKNOWN";
-    }
-}
-
-std::string print_blockwrite(spp::blockwrite b)
+std::string print_blockstate(spp::writestate b)
 {
     switch (b)
     {
-        case spp::blockwrite::ELIF_SKIP:
-            return "ELIF_SKIP";
-        case spp::blockwrite::ELIF_WRITE:
-            return "ELIF_WRITE";
-        case spp::blockwrite::ELIF_STOP:
-            return "ELIF_STOP";
+        case spp::writestate::AWAIT_NONE:
+            return "NONE";
+        case spp::writestate::AWAIT_NEXT:
+            return "NEXT";
+        case spp::writestate::AWAIT_WRITEBLOCK:
+            return "WRITEBLOCK";
+        case spp::writestate::AWAIT_ENDIF:
+            return "AWAIT_ENDIF";
         default:
             return "UNKNOWN";
     }
@@ -76,5 +59,5 @@ std::string print_blockwrite(spp::blockwrite b)
 void dump_hash_table() {}
 std::string print_line_type(spp::line_type t) { return "";}
 std::string print_verdict(spp::verdict v) { return "";}
-std::string print_blockwrite(spp::blockwrite b) { return "";}
+std::string print_blockstate(spp::writestate b) { return "";}
 #endif
