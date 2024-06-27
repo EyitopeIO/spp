@@ -18,7 +18,6 @@
 static reader_output* getLine(std::ifstream& reader, pstate& stats);
 
 
-
 static int token_len(spp::line_type type)
 {
     switch (type)
@@ -124,7 +123,6 @@ static reader_output* getLine(std::ifstream& reader, pstate& stats)
     }
     else
     {
-        /* This should never happen */
         output.line = "";
         output.ltype = spp::line_type::FILEEND;
         cerr_debug_print("[WARN] Segfault imminent!" << std::endl);
@@ -198,6 +196,7 @@ bool judge_lines(std::ifstream& reader, std::ofstream& writer)
             {
                 write_block(reader,writer,stats);
             }
+	    stats.wstate = spp::writestate::AWAIT_NONE;
         }
         
         else if (ro->ltype == spp::line_type::ENDIF)

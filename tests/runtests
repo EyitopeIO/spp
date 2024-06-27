@@ -7,7 +7,7 @@ spp="$(realpath cbuild/spp)"
 testdir="$(realpath tests)"
 
 
-ntests=4    # Total number of tests in this file
+ntests=5    # Total number of tests in this file
 
 cd tests
 
@@ -38,7 +38,7 @@ sampleargs="\
 2> -DDEBUG -Dpharetra_proin -DRhesus_factor -DUNDEFINED_FOR_ALL_4\n\
 3> -DDEBUG -DJESUS_CHRIST -DTEST_DELAY_2 -DTEST_BEGIN_FUNCTION\n\
 4> -DPRODUCTION -Dlorem_ipsum -DNIGERIA -DCOTEDIVOIRE\n\
-5> -DMID_ARG -Dpharetra_proin \
+5> \n\
 "
 
 ###########################################################
@@ -47,7 +47,6 @@ cat > $builddir/sample.1 <<EOF
 
 # This file is processed with varying conditions
 
-sleep 5
 echo "Continuing..."
 echo "Bye!"
 # This is the last line.
@@ -58,7 +57,6 @@ cat > $builddir/sample.2 <<EOF
 
 # This file is processed with varying conditions
 
-sleep 5
 echo "Continuing..."
 wget 88.13.2.45:329/debug.tar
 echo "Talk to you soon!"
@@ -98,8 +96,7 @@ cat > $builddir/sample.5 <<EOF
 # This file is processed with varying conditions
 
 echo "Continuing..."
-echo "Talk to you soon!"
-echo "Mid arg!"
+echo "See you later!"
 # This is the last line.
 EOF
 #########################################################
