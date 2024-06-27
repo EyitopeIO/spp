@@ -38,6 +38,7 @@ struct pstate
     ssize_t opened_ifdefs;
     std::string ifdef_line;
     size_t current_line_number;
+    size_t recursive_depth;
     spp::writestate wstate;
 };
 

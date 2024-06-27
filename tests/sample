@@ -27,5 +27,8 @@ echo "Bye!"
 echo "Talk to you soon!"
 #-- @else
 echo "See you later!"
+#-- @ifdef NESTED_IFDEF1
+echo "Nested 1"
+#-- @endif
 #-- @endif lorem_ipsum
 # This is the last line.

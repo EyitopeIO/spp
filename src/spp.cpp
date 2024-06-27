@@ -16,6 +16,7 @@
 #define token_endif "@endif"
 
 static reader_output* getLine(std::ifstream& reader, pstate& stats);
+bool judge_lines(std::ifstream& reader, std::ofstream& writer);
 
 
 static int token_len(spp::line_type type)
@@ -159,13 +160,14 @@ static void write_block(std::ifstream& reader, std::ofstream& writer, pstate& st
 
 bool judge_lines(std::ifstream& reader, std::ofstream& writer)
 {
-    reader_output* ro = nullptr;
-    pstate stats = {
+    static pstate stats = {
         .opened_ifdefs = 0,
         .ifdef_line = "",
         .current_line_number = 0,
+        .recursive_depth = 0,
         .wstate = spp::writestate::AWAIT_NONE
     };
+    reader_output* ro = nullptr;
    
     while ((ro = getLine(reader,stats)) != nullptr)
     {        
