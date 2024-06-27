@@ -15,6 +15,9 @@
 #define token_else "@else"  // Note the absence of space in the string
 #define token_endif "@endif"
 
+static reader_output* getLine(std::ifstream& reader, pstate& stats);
+
+
 static int token_len(spp::line_type type)
 {
     switch (type)
@@ -32,25 +35,32 @@ static int token_len(spp::line_type type)
     }
 }
 
-static bool simplify(std::string& line, spp::line_type ltype)
+static bool simplify(reader_output* ro)
 {
-    line.erase(0,token_len(ltype));
+    if (!ro)
+    {
+        cerr_debug_print("[WARN]: pointer ro is null" << std::endl);
+        return false;
+    }
+    
+    ro->line.erase(0,token_len(ro->ltype));
 
     /* Match token with only alphanumerics and without brackets or logical */
     std::regex activex("^[a-zA-Z0-9]+",std::regex_constants::extended);
     std::smatch matchx;
-    if (std::regex_search(line,matchx,activex))
+    if (std::regex_search(ro->line,matchx,activex))
     {
-        if (is_string_in_hash_table(line))
+        if (is_string_in_hash_table(ro->line))
         {
-            cerr_debug_print("Eval [True] " << line << std::endl);
+            cerr_debug_print("Eval [True] " << ro->line << std::endl);
             return true;
         }
     }
+    cerr_debug_print("Eval [False] " << ro->line << std::endl);
     return false;
 }
 
-static spp::line_type check_line_type(std::string& line, parse_state& state)
+static spp::line_type check_line_type(std::string& line, pstate& state)
 {
     if (line[0] == '#' && line[1] == '-' && line[2] == '-')
     {
@@ -63,175 +73,182 @@ static spp::line_type check_line_type(std::string& line, parse_state& state)
         else if (line.find(token_else,2) != std::string::npos)
             return spp::line_type::ELSE;
         else
-            std::cerr << "Error: Invalid directive on line " << state.line_number << std::endl;
+            std::cerr << "Error: Invalid directive on line " << state.current_line_number << std::endl;
     }
     return spp::line_type::NORMAL;
 }
 
-
-static judge_ruling judge_line(std::ifstream& reader, std::ofstream& writer,
-                               parse_state& pstate)
+/* Function to find the terminating endif of the the block we're examining */
+static spp::line_type fastforward_block(std::ifstream& reader, pstate& stats)
 {
+    cerr_debug_print("[>>] " << std::endl);
+    spp::line_type l = spp::line_type::FILEEND;
 
-
-    /*
-        This will depict what this function is doing. Each vertical "slash"
-        represents a line. We read each line of the file once from top to
-        bottom. We do not want to pass through the file twice or generate any
-        parse tree or whatnot.
-
-        The important thing to note is that the reader and writer file stream
-        always refers to the same location in the file, no matter how deep the
-        recursive call stack may be. So from the view of the outermost (i.e.
-        letter A in square brackets) ifdef, when the recursive call to
-        `judge_line` returns, the writer would be at point B, even though it
-        has only gone through the loop once i.e. when the writer was at A.
-
-
-    ______________________________________________________
-    | <first line of file here>
-    |
-    |
-    |   <-- ifdef [A]
-    |
-    |
-    |               |   <-- ifdef
-    |               |
-    |               |
-    |               |               |   <-- ifdef
-    |               |               |
-    |               |               |
-    |               |               |   <-- elif
-    |               |               |
-    |               |               |   <-- else
-    |               |               |
-    |               |               |   <-- endif
-    |               |   <-- endif
-    |
-    |
-    |  <-- endif [B]
-    |
-    |
-    | <last line of file here>
-    |____________________________________________________
-    */
-
-
-    judge_ruling j = {
-        .v = spp::verdict::WRITE,
-        .l = spp::line_type::NORMAL,
-        .see_next_block = false
-    };
-
-    std::string line;
-    while (std::getline(reader,line))
+    reader_output* ro = nullptr;
+    while ((ro = getLine(reader,stats)) != nullptr)
     {
-        pstate.line_number++;
-        j.l = check_line_type(line,pstate);
-        cerr_debug_print("Line [A] " << pstate.line_number << ": type " << j.l << ": " << line << std::endl);
-
-        /* The recursive case */
-        if (j.l == spp::line_type::IFDEF)
+        if (ro->ltype == spp::line_type::ENDIF)
         {
-            pstate.opened_ifdefs++;
+            if (stats.opened_ifdefs == 0) {
+                stats.wstate = spp::writestate::AWAIT_NONE;
+                l = ro->ltype;
+                break;
+            }
+        }
+    }
+    cerr_debug_print("[>] " << std::endl);
+    return l;
+}
 
-            if (simplify(line, j.l))
+static reader_output* getLine(std::ifstream& reader, pstate& stats)
+{
+    static reader_output output;
+    reader_output* op = &output;
+    if (std::getline(reader,output.line))
+    {
+        /* This function MUST be the only place where the line number and opened
+           ifdefs are changed, otherwise you risk counting incorrectly */
+        stats.current_line_number++;
+        output.ltype = check_line_type(output.line, stats);
+        switch (output.ltype)
+        {
+            case spp::line_type::IFDEF:
+                stats.opened_ifdefs++;
+                break;
+            case spp::line_type::ENDIF:
+                stats.opened_ifdefs--;
+            default:
+                break;
+        }
+    }
+    else
+    {
+        output.line = "";
+        output.ltype = spp::line_type::FILEEND;
+        cerr_debug_print("[WARN] Segfault imminent!" << std::endl);
+        op = nullptr;   
+    }
+    cerr_debug_print(" oif: " << stats.opened_ifdefs << " [line] " << output.line << std::endl);
+    return op;
+}
+
+static void write_block(std::ifstream& reader, std::ofstream& writer, pstate& stats)
+{
+    reader_output* ro = nullptr;    
+    while ((ro = getLine(reader,stats)) != nullptr)
+    {
+        if ( ro->ltype == spp::line_type::NORMAL)
+        {
+            cerr_debug_print(ro->line << std::endl);
+            writer << ro->line << std::endl;
+        }
+        else
+        {
+            if (ro->ltype == spp::line_type::ENDIF)
+                return;
+            else
             {
-                /* Return value ignored because as discussed above, the recursive
-                   calls use the same reference to the reader and writer file, so
-                   decisions to read or write would have been made, and there is
-                   no need to overwrite what the previous call thought its line to
-                   be */
-                judge_line(reader,writer,pstate);
+                fastforward_block(reader,stats);
+                return;
+            }
+        }
+    } 
+    std::cerr << "Unterminated block. line: " << stats.ifdef_line << std::endl;
+    std::exit(EXIT_FAILURE);
+}
 
-                j.see_next_block = false;
+bool judge_lines(std::ifstream& reader, std::ofstream& writer)
+{
+    reader_output* ro = nullptr;
+    pstate stats = {
+        .opened_ifdefs = 0,
+        .ifdef_line = "",
+        .current_line_number = 0,
+        .wstate = spp::writestate::AWAIT_NONE
+    };
+   
+    while ((ro = getLine(reader,stats)) != nullptr)
+    {        
+        if (ro->ltype == spp::line_type::IFDEF)
+        {
+            if (simplify(ro))
+            {
+                stats.ifdef_line = ro->line;
+                write_block(reader,writer,stats);
             }
             else
             {
-                j.v = spp::verdict::SKIP;
-                j.see_next_block = true;
+                stats.wstate = spp::writestate::AWAIT_NEXT;
             }
-            cerr_debug_print("Line [B] " << pstate.line_number << ": verdict " << j.v << ": " << line << std::endl);
         }
-
-        /* Beware that in the else-if and else blocks, setting the verdict to
-         * SKIP is not logically equivalent to returning to the next iteration
-         * (i.e. `continue' statement) of the main loop.
-         */
-        else if (j.l == spp::line_type::ELIF)
+        
+        else if (ro->ltype == spp::line_type::ELIF)
         {
-            if (j.see_next_block && simplify(line, j.l))
+            if ((stats.wstate = spp::writestate::AWAIT_NEXT) && simplify(ro))
             {
-                j.see_next_block = false;
-                j.v = spp::verdict::WRITE;
-            }
-            else {
-                j.v = spp::verdict::SKIP;
+                write_block(reader,writer,stats);
             }
         }
-
-        else if ( j.l == spp::line_type::ELSE)
+        
+        else if (ro->ltype == spp::line_type::ELSE)
         {
-            if (j.see_next_block)
+            if ((stats.wstate = spp::writestate::AWAIT_NEXT))
             {
-                j.see_next_block = false;
-                j.v = spp::verdict::WRITE;
+                write_block(reader,writer,stats);
             }
-            else {
-                j.v = spp::verdict::SKIP;
-            }
+	    stats.wstate = spp::writestate::AWAIT_NONE;
         }
-
-        /* The terminating case i.e. we have reached the innermost endif */
-        else if (j.l == spp::line_type::ENDIF)
+        
+        else if (ro->ltype == spp::line_type::ENDIF)
         {
-            pstate.opened_ifdefs--;
-            j.v = spp::verdict::SKIP;
-            j.see_next_block = false;
-            return j;
+            stats.wstate = spp::writestate::AWAIT_NONE;
         }
-
-        else {
-            j.l = spp::line_type::NORMAL;
+        
+        
+        else if (ro->ltype == spp::line_type::NORMAL)
+        {
+            switch(stats.wstate)
+            {
+                case spp::AWAIT_NEXT:
+                    continue;
+                    
+                default:            
+                    cerr_debug_print("[write]: " << ro->line << std::endl);
+                    writer << ro->line << std::endl;
+                    break;
+            }
         }
-
-        cerr_debug_print("Line [C] " << pstate.line_number << ": verdict " << j.v << ": " << line << std::endl);
-
-        /* This is the base case. We are in the innermost ifdef and make
-         * our decision to write a line or not. Online normal lines should be
-         * written anyway
-         */
-        if (j.v == spp::verdict::WRITE && j.l == spp::line_type::NORMAL)
-            writer << line << std::endl;
+        
+        else if (ro->ltype == spp::line_type::FILEEND)
+        {
+            break;
+        }
+        
+        else
+        {
+            std::cerr << "Confusing line: " << ro->line << std::endl;
+            std::exit(EXIT_FAILURE);
+        }        
     }
-    j.v = spp::verdict::DONE;
-    return j;
+    
+    if (stats.opened_ifdefs != 0)
+        return false;
+        
+    return true;
 }
 
-void preprocess_file(char *filename)
-{
-    parse_state pstate = {
-        .opened_ifdefs = 0,
-        .line_number = 0
-    };
 
+void preprocess_file(char *filename)
+{    
     std::ifstream ifile(filename);
     std::string output_filename = std::string(filename) + spp_extension;
     std::ofstream ofile(output_filename);
-
-    judge_ruling final_verdict = {
-        spp::verdict::WRITE,
-        spp::line_type::NORMAL
-    };
-
-    while (final_verdict.v != spp::verdict::DONE)
-        final_verdict = judge_line(ifile,ofile,pstate);
-
+    bool s = judge_lines(ifile, ofile);
     ifile.close();
     ofile.close();
-    if (pstate.opened_ifdefs != 0)
+    if (!s)
     {
-        std::cerr << "Error: Unterminated ifdefs on line " << pstate.line_number << std::endl;
+        std::cerr << "Error: Unterminated block" << std::endl;
         std::remove(output_filename.c_str());
         std::exit(EXIT_FAILURE);
     }
