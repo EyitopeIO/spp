@@ -1,5 +1,6 @@
 #include "spp.h"
 #include "sppdebug.h"
+#include "parser.h"
 #include <fstream>
 #include <string>
 #include <cstring>
@@ -16,6 +17,7 @@
 #define token_endif "@endif"
 
 static reader_output* getLine(std::ifstream& reader, pstate& stats);
+static bool simplify(reader_output* ro) __attribute__((unused));
 bool judge_lines(std::ifstream& reader, std::ofstream& writer);
 
 
@@ -38,28 +40,35 @@ static int token_len(spp::line_type type)
 
 static bool simplify(reader_output* ro)
 {
+    bool ret = false;
+
     if (!ro)
     {
         cerr_debug_print("[WARN]: pointer ro is null" << std::endl);
-        return false;
+        return ret;
     }
     
-    ro->line.erase(0,token_len(ro->ltype));
-
-    /* Match token with only alphanumerics and without brackets or logical */
+    ro->line.erase(0,token_len(ro->ltype)); // Strip leading annotation
+    
     std::regex activex("^[a-zA-Z0-9]+",std::regex_constants::extended);
     std::smatch matchx;
     if (std::regex_search(ro->line,matchx,activex))
     {
         if (is_string_in_hash_table(ro->line))
-        {
-            cerr_debug_print("Eval [True] " << ro->line << std::endl);
-            return true;
-        }
+            ret = true;
     }
-    cerr_debug_print("Eval [False] " << ro->line << std::endl);
-    return false;
+    else if (parse(ro->line))   // Anything more than a simply define in the regex is parsed
+        ret = true;
+
+    if (ret)
+        cerr_debug_print("Eval [True] " << ro->line << std::endl);
+    else
+        cerr_debug_print("Eval [False] " << ro->line << std::endl);    
+
+    return ret;
 }
+
+
 
 static spp::line_type check_line_type(std::string& line, pstate& state)
 {

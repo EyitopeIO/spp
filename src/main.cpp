@@ -26,11 +26,7 @@ int main (int argc, char **argv)
     int argc_local = argc - 1;
     
     while (argc_local--)
-    {
-        cerr_debug_print("Arg " << argc - argc_local << "--> " << *argv_local
-                        << std::endl);
         judge_cmdline(argv_local++);
-    }
     // dump_hash_table();
     return 0;
 }
