@@ -17,7 +17,7 @@
 #define token_endif "@endif"
 
 static reader_output* getLine(std::ifstream& reader, pstate& stats);
-static bool simplify(reader_output* ro) __attribute__((unused));
+static bool simplify(reader_output* ro);
 bool judge_lines(std::ifstream& reader, std::ofstream& writer);
 
 
@@ -57,7 +57,7 @@ static bool simplify(reader_output* ro)
         if (is_string_in_hash_table(ro->line))
             ret = true;
     }
-    else if (parse(ro->line))   // Anything more than a simply define in the regex is parsed
+    else if (parse(ro->line))
         ret = true;
 
     if (ret)
@@ -67,8 +67,6 @@ static bool simplify(reader_output* ro)
 
     return ret;
 }
-
-
 
 static spp::line_type check_line_type(std::string& line, pstate& state)
 {
