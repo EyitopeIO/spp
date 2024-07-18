@@ -1,3 +1,2 @@
 1. Support nested ifdefs
-2. Support operator precedence
-
+2. Throw error if "--Dxxx" is entered instead of "-Dxxx
