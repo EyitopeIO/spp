@@ -8,7 +8,7 @@
 
 #define HASH_TABLE_SIZE 31
 
-typedef uint64_t hash_type;
+typedef uint64_t hash_type; // 64 bit for confidence that no overflow will occur
 
 struct table_element {
     hash_type hash;

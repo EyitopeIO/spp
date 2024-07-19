@@ -20,7 +20,9 @@ static reader_output* getLine(std::ifstream& reader, pstate& stats);
 static bool simplify(reader_output* ro);
 bool judge_lines(std::ifstream& reader, std::ofstream& writer);
 
-
+/*
+ * Function to get the length of a token
+*/
 static int token_len(spp::line_type type)
 {
     switch (type)
@@ -37,7 +39,12 @@ static int token_len(spp::line_type type)
             return -1;
     }
 }
+/*
+ * Simplify an annotated line to mean either true or false
 
+ * @param ro: a pointer to a reader_output struct
+ * @return: true, meaning the line is to be written to the output file; false otherwise
+*/
 static bool simplify(reader_output* ro)
 {
     bool ret = false;
@@ -68,6 +75,12 @@ static bool simplify(reader_output* ro)
     return ret;
 }
 
+/*
+ * Function to check what type of annotation the line has
+ * 
+ * @param line: the line to check
+ * @param state: the global parser state object
+*/
 static spp::line_type check_line_type(std::string& line, pstate& state)
 {
     if (line[0] == '#' && line[1] == '-' && line[2] == '-')
@@ -86,7 +99,10 @@ static spp::line_type check_line_type(std::string& line, pstate& state)
     return spp::line_type::NORMAL;
 }
 
-/* Function to find the terminating endif of the the block we're examining */
+/*
+ * Function to fastforward the reader to the end of a block i.e. find the terminiating endif
+ * of the block we're reading
+*/
 static spp::line_type fastforward_block(std::ifstream& reader, pstate& stats)
 {
     cerr_debug_print("[>>] " << std::endl);
@@ -114,7 +130,7 @@ static reader_output* getLine(std::ifstream& reader, pstate& stats)
     reader_output* op = &output;
     if (std::getline(reader,output.line))
     {
-        /* This function MUST be the only place where the line number and opened
+        /* WARNING: This function MUST be the only place where the line number and opened
            ifdefs are changed, otherwise you risk counting incorrectly */
         stats.current_line_number++;
         output.ltype = check_line_type(output.line, stats);
@@ -165,6 +181,10 @@ static void write_block(std::ifstream& reader, std::ofstream& writer, pstate& st
     std::exit(EXIT_FAILURE);
 }
 
+/*
+ * This is the main function that reach line of the file and decides whether to write it to the output file
+ * or not. It is essentially the heart of spp
+*/
 bool judge_lines(std::ifstream& reader, std::ofstream& writer)
 {
     static pstate stats = {
