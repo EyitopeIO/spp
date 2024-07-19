@@ -34,7 +34,7 @@ getTestArg(){
 ############################################################
 
 sampleargs="\
-1> -Dlorem_ipsum -DTEST_DELAY_1 -DTEST_DELAY_3 -DTEST_DELAY_6\n\
+1> -Dlorem_ipsum -DTEST_DELAY_1 -DCROWBAR -DTEST_DELAY_6\n\
 2> -DDEBUG -Dpharetra_proin -DRhesus_factor -DUNDEFINED_FOR_ALL_4\n\
 3> -DDEBUG -DJESUS_CHRIST -DTEST_DELAY_2 -DTEST_BEGIN_FUNCTION\n\
 4> -DPRODUCTION -Dlorem_ipsum -DNIGERIA -DCOTEDIVOIRE\n\
@@ -105,7 +105,9 @@ echo
 for n in $(seq $ntests -1 1)
 do
     aggs="$(getTestArg $n)"
+    set -x
     $spp $aggs $testdir/sample
+    set +x
     echo "Test sample.$n --> $aggs"
     if verifyEqual $builddir/sample.$n $testdir/sample.spp ; then
         printf "[OK]\n\n"
