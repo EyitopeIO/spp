@@ -50,7 +50,7 @@ static bool simplify(reader_output* ro)
     
     ro->line.erase(0,token_len(ro->ltype)); // Strip leading annotation
     
-    std::regex activex("^[a-zA-Z0-9]+",std::regex_constants::extended);
+    std::regex activex("^[a-zA-Z0-9]+[ ]+$",std::regex_constants::extended);
     std::smatch matchx;
     if (std::regex_search(ro->line,matchx,activex))
     {
