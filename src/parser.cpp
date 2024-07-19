@@ -6,7 +6,6 @@
 #include <cctype>
 #include <stack>
 #include <queue>
-#include <regex>
 
 
 static void fetch_tokens(std::vector<char>& tokens, const std::string& input)
@@ -84,6 +83,37 @@ static void fetch_tokens(std::vector<char>& tokens, const std::string& input)
 
 }
 
+static bool evaluate_rpn(std::stack<char>& os, std::queue<char>& oq)
+{
+    bool a, b;
+    char c;
+
+    while (oq.size())
+    {
+        c = oq.front();
+        oq.pop();
+
+        if (isalpha(c)) // 't' or 'f'
+            os.push(c);
+
+        else if (c == '&' || c == '|')
+        {
+            a = (os.top() == 't') ? true : false;
+            os.pop();
+
+            b = (os.top() == 'f') ? false : true;
+            os.pop();
+
+            if (c == '&')
+                os.push((a && b) == true ? 't' : 'f');
+
+            else if (c == '|')
+                os.push((a || b) == true ? 't' : 'f');
+        }
+    }
+    return os.top() == 't' ? true : false;
+}
+
 bool parse(const std::string& input)
 {
     /* 
@@ -155,15 +185,16 @@ bool parse(const std::string& input)
     }
 
 #if defined(DEBUG) || defined(_DEBUG)
+    std::queue<char> tq(oq);
     std::cout << "\n=== [reverse polish] ===" << std::endl;
-    while (oq.size())
+    while (tq.size())
     {
-        std::cout << oq.front() << " ";
-        oq.pop();
+        std::cout << tq.front() << " ";
+        tq.pop();
     }
     std::cout << std::endl;
     std::cout << "===                  ===\n\n";
 #endif
     
-    return false;
+    return evaluate_rpn(os, oq);
 }
