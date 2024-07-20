@@ -24,6 +24,8 @@ int main (int argc, char **argv)
 {
     char **argv_local = argv + 1;
     int argc_local = argc - 1;
+
+    setvbuf(stdout, nullptr, _IONBF, 0);
     
     while (argc_local--)
         judge_cmdline(argv_local++);

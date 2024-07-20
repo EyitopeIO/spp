@@ -4,7 +4,8 @@ preprocess shell files. `spp` mostly follows the c-preprocessor syntax.
 ## Usage
 
 First you need to annotate your shell files and use the recognised syntax for
-spp to find what you intend to substitute. See annotated example further below
+spp to find what you intend to substitute. See annotated example further below.
+Any comment/definition after the endif directive is ignored.
 
 `spp -Dyacc -DTEST_ARG_0 -Dlorem_ipsum test1.sh test2.sh`
 
@@ -19,7 +20,7 @@ print_startup_message(){
   echo "Welcome back!"
 #-- @else
   :
-#-- @endif
+#-- @endif TEST_ARG_0
 #-- @ifdef lorem_ipsum && dolor_sit
   wget $CPE_IPADDR/userconfig.yaml
 #-- @endif

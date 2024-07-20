@@ -21,13 +21,13 @@
 */
 
 
-/*
- * Function to convert input string to an array of tokens
+/**
+ * @brief Function to convert input string to an array of tokens
  * 
- * @param input: Annotated line read from a file but with annotation stripped.
- * @param tokens: A vector to store the tokens
+ * @param input Annotated line read from a file but with annotation stripped.
+ * @param tokens A vector to store the tokens
  *
-*/
+ */
 static void fetch_tokens(std::vector<char>& tokens, const std::string& input)
 {
     std::string token = "";
@@ -104,14 +104,14 @@ static void fetch_tokens(std::vector<char>& tokens, const std::string& input)
 }
 
 
-/*
- * Function to evaluate the reverse polish notation
+/**
+ * @brief Function to evaluate the reverse polish notation
  * 
- * @param os: An empty stack to store the operands.
- * @param oq: A queue containing the reverse polish notation.
- * @return: true if the expression evaluates to true; false otherwise
+ * @param os An empty stack to store the operands.
+ * @param oq A queue containing the reverse polish notation.
+ * @return true if the expression evaluates to true; false otherwise
  *
-*/
+ */
 static bool evaluate_rpn(std::stack<char>& os, std::queue<char>& oq)
 {
     bool a, b;

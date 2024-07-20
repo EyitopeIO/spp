@@ -7,7 +7,7 @@ spp="$(realpath cbuild/spp)"
 testdir="$(realpath tests)"
 
 
-ntests=5    # Total number of tests in this file
+ntests=6    # Total number of tests in this file
 
 cd tests
 
@@ -38,7 +38,9 @@ sampleargs="\
 2> -DDEBUG -Dpharetra_proin -DRhesus_factor -DUNDEFINED_FOR_ALL_4\n\
 3> -DDEBUG -DJESUS_CHRIST -DTEST_DELAY_2 -DTEST_BEGIN_FUNCTION\n\
 4> -DPRODUCTION -Dlorem_ipsum -DNIGERIA -DCOTEDIVOIRE\n\
-5> \n\
+5> -DNESTED_IFDEF1\n\
+6> -DNESTED_ELIF1\n\
+7> -DNESTED_ELIF2 -DNESTED_ELIF1\n\
 "
 
 ###########################################################
@@ -97,18 +99,45 @@ cat > $builddir/sample.5 <<EOF
 
 echo "Continuing..."
 echo "See you later!"
+echo "ifdef 1"
 # This is the last line.
 EOF
 #########################################################
+cat > $builddir/sample.6 <<EOF
+#!/bin/bash
 
+# This file is processed with varying conditions
+
+echo "Continuing..."
+echo "See you later!"
+echo "elif 1"
+# This is the last line.
+EOF
+#########################################################
+cat > $builddir/sample.7 <<EOF
+#!/bin/bash
+
+# This file is processed with varying conditions
+
+echo "Continuing..."
+echo "See you later!"
+echo "elif 2"
+echo "elif 1"
+# This is the last line.
+EOF
+#########################################################
 echo
 for n in $(seq $ntests -1 1)
 do
+    echo "=========================="
+    echo "===== Test sample.$n ======"
+    echo "=========================="
+    echo
     aggs="$(getTestArg $n)"
     set -x
     $spp $aggs $testdir/sample
     set +x
-    echo "Test sample.$n --> $aggs"
+    echo "Test sample.$n"
     if verifyEqual $builddir/sample.$n $testdir/sample.spp ; then
         printf "[OK]\n\n"
     else

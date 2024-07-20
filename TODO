@@ -1,2 +1,2 @@
-1. Support nested ifdefs
-2. Throw error if "--Dxxx" is entered instead of "-Dxxx
+- Throw error if "--Dxxx" is entered instead of "-Dxxx
+- Read from stdin
