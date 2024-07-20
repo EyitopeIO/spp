@@ -28,7 +28,13 @@ echo "Talk to you soon!"
 #-- @else
 echo "See you later!"
 #-- @ifdef NESTED_IFDEF1
-echo "Nested 1"
-#-- @endif
+echo "ifdef 1"
+#-- @elif NESTED_ELIF1
+#-- @ifdef NESTED_ELIF2
+echo "elif 2"
+#-- @endif NESTED_ELIF2
+echo "elif 1"
+#-- @endif NESTED_IFDEF1
+#-- @endif (CROWBAR || lorem_ipsum)
 #-- @endif lorem_ipsum
 # This is the last line.

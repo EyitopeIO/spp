@@ -16,13 +16,78 @@
 #define token_else "@else"  // Note the absence of space in the string
 #define token_endif "@endif"
 
+
 static reader_output* getLine(std::ifstream& reader, pstate& stats);
 static bool simplify(reader_output* ro);
 bool judge_lines(std::ifstream& reader, std::ofstream& writer);
 
+
+if_stack *if_stack_head = nullptr;
+if_stack *if_stack_tail = nullptr;  // Also represents the innermost ifdef-block
+
+
+static if_stack* create_if_stack(pstate& stat)
+{
+    if_stack* ifs = new if_stack;
+    ifs->line_number = stat.current_line_number;
+    ifs->fastforward = false;
+    ifs->writeblock = false;
+    ifs->next = nullptr;
+    ifs->prev = nullptr;
+    return ifs;
+}
+
+static void push_if_stack(if_stack* ifs)
+{
+
+    if (!if_stack_head)
+    {
+        if_stack_head = ifs;
+        if_stack_tail = if_stack_head;
+        cerr_debug_print("[push]: head " << if_stack_tail->line_number);
+    }
+    else
+    {
+        if_stack* cursor = if_stack_head;
+        while (cursor)
+        {
+            if (!cursor->next)
+            {
+                cursor->next = ifs;
+                ifs->prev = cursor;
+                ifs->fastforward = cursor->fastforward;
+                if_stack_tail = ifs;
+                break;
+            }
+            cursor = cursor->next;
+        }
+        cerr_debug_print("[push]: line " << if_stack_tail->line_number);
+    }
+}
+
+static void pop_if_stack(void)
+{
+    if (if_stack_tail)
+    {
+        if_stack* tmp = if_stack_tail;
+        if_stack_tail = if_stack_tail->prev;
+        if (!if_stack_tail)
+        {
+            if_stack_head = nullptr;
+            cerr_debug_print("[pop] head " << tmp->line_number << std::endl);
+        }
+        else
+            cerr_debug_print("[pop] line " << tmp->line_number << std::endl);
+        
+        delete tmp;
+        return; 
+    }
+    cerr_debug_print("WARN: nothing to pop" << std::endl);
+}
+
 /*
  * Function to get the length of a token
-*/
+ */
 static int token_len(spp::line_type type)
 {
     switch (type)
@@ -44,7 +109,7 @@ static int token_len(spp::line_type type)
 
  * @param ro: a pointer to a reader_output struct
  * @return: true, meaning the line is to be written to the output file; false otherwise
-*/
+ */
 static bool simplify(reader_output* ro)
 {
     bool ret = false;
@@ -80,7 +145,7 @@ static bool simplify(reader_output* ro)
  * 
  * @param line: the line to check
  * @param state: the global parser state object
-*/
+ */
 static spp::line_type check_line_type(std::string& line, pstate& state)
 {
     if (line[0] == '#' && line[1] == '-' && line[2] == '-')
@@ -99,31 +164,6 @@ static spp::line_type check_line_type(std::string& line, pstate& state)
     return spp::line_type::NORMAL;
 }
 
-/*
- * Function to fastforward the reader to the end of a block i.e. find the terminiating endif
- * of the block we're reading
-*/
-static spp::line_type fastforward_block(std::ifstream& reader, pstate& stats)
-{
-    cerr_debug_print("[>>] " << std::endl);
-    spp::line_type l = spp::line_type::FILEEND;
-
-    reader_output* ro = nullptr;
-    while ((ro = getLine(reader,stats)) != nullptr)
-    {
-        if (ro->ltype == spp::line_type::ENDIF)
-        {
-            if (stats.opened_ifdefs == 0) {
-                stats.wstate = spp::writestate::AWAIT_NONE;
-                l = ro->ltype;
-                break;
-            }
-        }
-    }
-    cerr_debug_print("[>] " << std::endl);
-    return l;
-}
-
 static reader_output* getLine(std::ifstream& reader, pstate& stats)
 {
     static reader_output output;
@@ -134,16 +174,6 @@ static reader_output* getLine(std::ifstream& reader, pstate& stats)
            ifdefs are changed, otherwise you risk counting incorrectly */
         stats.current_line_number++;
         output.ltype = check_line_type(output.line, stats);
-        switch (output.ltype)
-        {
-            case spp::line_type::IFDEF:
-                stats.opened_ifdefs++;
-                break;
-            case spp::line_type::ENDIF:
-                stats.opened_ifdefs--;
-            default:
-                break;
-        }
     }
     else
     {
@@ -152,34 +182,9 @@ static reader_output* getLine(std::ifstream& reader, pstate& stats)
         cerr_debug_print("[WARN] Segfault imminent!" << std::endl);
         op = nullptr;   
     }
-    cerr_debug_print(" oif: " << stats.opened_ifdefs << " [line] " << output.line << std::endl);
     return op;
 }
 
-static void write_block(std::ifstream& reader, std::ofstream& writer, pstate& stats)
-{
-    reader_output* ro = nullptr;    
-    while ((ro = getLine(reader,stats)) != nullptr)
-    {
-        if ( ro->ltype == spp::line_type::NORMAL)
-        {
-            cerr_debug_print(ro->line << std::endl);
-            writer << ro->line << std::endl;
-        }
-        else
-        {
-            if (ro->ltype == spp::line_type::ENDIF)
-                return;
-            else
-            {
-                fastforward_block(reader,stats);
-                return;
-            }
-        }
-    } 
-    std::cerr << "Unterminated block. line: " << stats.ifdef_line << std::endl;
-    std::exit(EXIT_FAILURE);
-}
 
 /*
  * This is the main function that reach line of the file and decides whether to write it to the output file
@@ -188,81 +193,69 @@ static void write_block(std::ifstream& reader, std::ofstream& writer, pstate& st
 bool judge_lines(std::ifstream& reader, std::ofstream& writer)
 {
     static pstate stats = {
-        .opened_ifdefs = 0,
-        .ifdef_line = "",
-        .current_line_number = 0,
-        .recursive_depth = 0,
-        .wstate = spp::writestate::AWAIT_NONE
+        0, "", 0, 0, spp::writestate::AWAIT_NONE
     };
     reader_output* ro = nullptr;
-   
+
     while ((ro = getLine(reader,stats)) != nullptr)
-    {        
+    {
+        cerr_debug_print("[line]:" << print_line_type(ro->ltype) << " "
+            << ro->line << std::endl);
+
         if (ro->ltype == spp::line_type::IFDEF)
         {
+            if_stack* tmp = create_if_stack(stats);
+            push_if_stack(tmp);   // if_stack_tail is tmp after this line
+
             if (simplify(ro))
             {
-                stats.ifdef_line = ro->line;
-                write_block(reader,writer,stats);
-            }
-            else
-            {
-                stats.wstate = spp::writestate::AWAIT_NEXT;
+                if_stack_tail->writeblock = true;
             }
         }
-        
-        else if (ro->ltype == spp::line_type::ELIF)
+
+        if (ro->ltype == spp::line_type::ELIF)
         {
-            if ((stats.wstate = spp::writestate::AWAIT_NEXT) && simplify(ro))
+            if (if_stack_tail && !if_stack_tail->fastforward)
             {
-                write_block(reader,writer,stats);
+                if (if_stack_tail && (if_stack_tail->writeblock == true))
+                {
+                    if_stack_tail->writeblock = false;
+                    if_stack_tail->fastforward = true;
+                }
+                else
+                {
+                    if (simplify(ro))
+                        if_stack_tail->writeblock = true;
+                }
             }
         }
-        
-        else if (ro->ltype == spp::line_type::ELSE)
+
+        if (ro->ltype == spp::line_type::ELSE)
         {
-            if ((stats.wstate = spp::writestate::AWAIT_NEXT))
-            {
-                write_block(reader,writer,stats);
-            }
-	    stats.wstate = spp::writestate::AWAIT_NONE;
+            if (if_stack_tail && !if_stack_tail->fastforward)
+                if_stack_tail->writeblock = !if_stack_tail->writeblock;
         }
-        
+
         else if (ro->ltype == spp::line_type::ENDIF)
         {
-            stats.wstate = spp::writestate::AWAIT_NONE;
+            pop_if_stack();
         }
-        
-        
+
         else if (ro->ltype == spp::line_type::NORMAL)
         {
-            switch(stats.wstate)
+            if (if_stack_tail && if_stack_tail->fastforward)
             {
-                case spp::AWAIT_NEXT:
-                    continue;
-                    
-                default:            
-                    cerr_debug_print("[write]: " << ro->line << std::endl);
-                    writer << ro->line << std::endl;
-                    break;
+                cerr_debug_print("[>>]" << std::endl);
+                continue;
             }
+            if (if_stack_tail && !if_stack_tail->writeblock)
+                continue;
+
+            cerr_debug_print("[write]: " << ro->line << std::endl);
+            writer << ro->line << std::endl;
         }
-        
-        else if (ro->ltype == spp::line_type::FILEEND)
-        {
-            break;
-        }
-        
-        else
-        {
-            std::cerr << "Confusing line: " << ro->line << std::endl;
-            std::exit(EXIT_FAILURE);
-        }        
     }
-    
-    if (stats.opened_ifdefs != 0)
-        return false;
-        
+
     return true;
 }
 
