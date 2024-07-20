@@ -22,8 +22,8 @@ static bool simplify(reader_output* ro);
 bool judge_lines(std::ifstream& reader, std::ofstream& writer);
 
 
-if_stack *if_stack_head = nullptr;
-if_stack *if_stack_tail = nullptr;  // Also represents the innermost ifdef-block
+if_stack *if_stack_head = nullptr;  
+if_stack *if_stack_tail = nullptr;  // Also the cursor for the innermost ifdef block
 
 
 static if_stack* create_if_stack(pstate& stat)
@@ -85,30 +85,30 @@ static void pop_if_stack(void)
     cerr_debug_print("WARN: nothing to pop" << std::endl);
 }
 
-/*
- * Function to get the length of a token
+/**
+ * @brief Return the length of a token
  */
-static int token_len(spp::line_type type)
+static int token_len(line_type type)
 {
     switch (type)
     {
-        case spp::IFDEF:
+        case IFDEF:
             return token_prefix_len + std::strlen(token_ifdef) - 1;
-        case spp::ELIF:
+        case ELIF:
             return token_prefix_len + std::strlen(token_elif) - 1;
-        case spp::ELSE:
+        case ELSE:
             return token_prefix_len + std::strlen(token_else) - 1;
-        case spp::ENDIF:
+        case ENDIF:
             return token_prefix_len + std::strlen(token_endif) - 1;
         default:
             return -1;
     }
 }
-/*
- * Simplify an annotated line to mean either true or false
-
- * @param ro: a pointer to a reader_output struct
- * @return: true, meaning the line is to be written to the output file; false otherwise
+/**
+ * @brief Simplify an annotated line to mean either true or false
+ *
+ * @param ro a pointer to a reader_output struct
+ * @return true, meaning the line is to be written to the output file; false otherwise
  */
 static bool simplify(reader_output* ro)
 {
@@ -140,30 +140,37 @@ static bool simplify(reader_output* ro)
     return ret;
 }
 
-/*
- * Function to check what type of annotation the line has
+/**
+ * @brief Check what type of annotation the line has
  * 
- * @param line: the line to check
- * @param state: the global parser state object
+ * @param line the line to check
+ * @param state the global parser state object
  */
-static spp::line_type check_line_type(std::string& line, pstate& state)
+static line_type check_line_type(std::string& line, pstate& state)
 {
     if (line[0] == '#' && line[1] == '-' && line[2] == '-')
     {
         if (line.find(token_ifdef,2) != std::string::npos)
-            return spp::line_type::IFDEF;
+            return line_type::IFDEF;
         else if (line.find(token_endif,2) != std::string::npos)
-            return spp::line_type::ENDIF;
+            return line_type::ENDIF;
         else if (line.find(token_elif,2) != std::string::npos)
-            return spp::line_type::ELIF;
+            return line_type::ELIF;
         else if (line.find(token_else,2) != std::string::npos)
-            return spp::line_type::ELSE;
+            return line_type::ELSE;
         else
             std::cerr << "Error: Invalid directive on line " << state.current_line_number << std::endl;
     }
-    return spp::line_type::NORMAL;
+    return line_type::NORMAL;
 }
 
+/**
+ * @brief Get a line from the input file
+ * 
+ * @param reader the input file stream
+ * @param stats the global parser state object
+ * @return a pointer to a reader_output struct
+ */
 static reader_output* getLine(std::ifstream& reader, pstate& stats)
 {
     static reader_output output;
@@ -178,23 +185,23 @@ static reader_output* getLine(std::ifstream& reader, pstate& stats)
     else
     {
         output.line = "";
-        output.ltype = spp::line_type::FILEEND;
-        cerr_debug_print("[WARN] Segfault imminent!" << std::endl);
+        output.ltype = line_type::FILEEND;
         op = nullptr;   
     }
     return op;
 }
 
 
-/*
- * This is the main function that reach line of the file and decides whether to write it to the output file
- * or not. It is essentially the heart of spp
-*/
+/**
+ * @brief Process the lines of the input file
+ * 
+ * @param reader the input file stream
+ * @param writer the output file stream
+ * @return true if the operation was successful; false otherwise
+ */
 bool judge_lines(std::ifstream& reader, std::ofstream& writer)
 {
-    static pstate stats = {
-        0, "", 0, 0, spp::writestate::AWAIT_NONE
-    };
+    static pstate stats = { 0 };
     reader_output* ro = nullptr;
 
     while ((ro = getLine(reader,stats)) != nullptr)
@@ -202,18 +209,15 @@ bool judge_lines(std::ifstream& reader, std::ofstream& writer)
         cerr_debug_print("[line]:" << print_line_type(ro->ltype) << " "
             << ro->line << std::endl);
 
-        if (ro->ltype == spp::line_type::IFDEF)
+        if (ro->ltype == line_type::IFDEF)
         {
             if_stack* tmp = create_if_stack(stats);
-            push_if_stack(tmp);   // if_stack_tail is tmp after this line
-
+            push_if_stack(tmp);
             if (simplify(ro))
-            {
                 if_stack_tail->writeblock = true;
-            }
         }
 
-        if (ro->ltype == spp::line_type::ELIF)
+        if (ro->ltype == line_type::ELIF)
         {
             if (if_stack_tail && !if_stack_tail->fastforward)
             {
@@ -230,18 +234,18 @@ bool judge_lines(std::ifstream& reader, std::ofstream& writer)
             }
         }
 
-        if (ro->ltype == spp::line_type::ELSE)
+        if (ro->ltype == line_type::ELSE)
         {
             if (if_stack_tail && !if_stack_tail->fastforward)
                 if_stack_tail->writeblock = !if_stack_tail->writeblock;
         }
 
-        else if (ro->ltype == spp::line_type::ENDIF)
+        else if (ro->ltype == line_type::ENDIF)
         {
             pop_if_stack();
         }
 
-        else if (ro->ltype == spp::line_type::NORMAL)
+        else if (ro->ltype == line_type::NORMAL)
         {
             if (if_stack_tail && if_stack_tail->fastforward)
             {
