@@ -39,7 +39,6 @@ static if_stack* create_if_stack(pstate& stat)
 
 static void push_if_stack(if_stack* ifs)
 {
-
     if (!if_stack_head)
     {
         if_stack_head = ifs;
@@ -77,8 +76,10 @@ static void pop_if_stack(void)
             cerr_debug_print("[pop] head " << tmp->line_number << std::endl);
         }
         else
+        {
+            if_stack_tail->next = nullptr;
             cerr_debug_print("[pop] line " << tmp->line_number << std::endl);
-        
+        }
         delete tmp;
         return; 
     }
