@@ -1,2 +1,4 @@
 - Throw error if "--Dxxx" is entered instead of "-Dxxx
 - Read from stdin
+- Catch syntax errors
+- Reduce manual memory management as much as possible

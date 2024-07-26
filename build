@@ -11,7 +11,11 @@ while : ; do
       shift
       ;;
   -t)
-      DO_TESTS=y
+      export DO_TESTS=y
+      shift
+      ;;
+  -v)
+      export DO_VERBOSE=y
       shift
       ;;
   *)
