@@ -5,11 +5,16 @@
 
 #include <unistd.h>
 
+#define INVALIDCMDLINE(text) do { \
+    std::cerr << "Invalid definition: " << text << std::endl << std::endl;\
+    show_usage();\
+    } while (0);
+
 char** first_file = nullptr;
 
 void show_usage(void)
 {
-    std::cerr << "Usage: spp [-D<define>]... [files]..." << std::endl;
+    std::cerr << "Usage: spp [-D<define>] [files]" << std::endl;
     exit(EXIT_FAILURE);
 }
 
@@ -21,6 +26,10 @@ static void add_defines_to_hashtable(char *text)
 
 void parse_cmdline_defines(char *text)
 {
+    int ln = std::strlen(text);
+    if (ln <= 2)
+        INVALIDCMDLINE(text);
+
     switch(text[1])
     {
         case 'D':
@@ -34,8 +43,7 @@ void parse_cmdline_defines(char *text)
             break;
         }
         default:
-            std::cerr << "Unrecognised " << text[0] << text[1] << " in " <<
-                text << std::endl;
+            INVALIDCMDLINE(text);
     }
 }
 

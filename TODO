@@ -1,4 +1,5 @@
-- Throw error if "--Dxxx" is entered instead of "-Dxxx
+- Allow reading -Dxx=y format
 - Read from stdin
 - Catch syntax errors
 - Reduce manual memory management as much as possible
+- Package for GNU build system
