@@ -3,7 +3,10 @@
 #include "options.hpp"
 #include "sppdebug.h"
 
-
+/**
+ * @brief Function to parse definitions provided on the command line
+ * @param text: a single definition i.e. -DNAME
+ */
 static inline void judge_cmdline(char **cmd_line_text)
 {
     /* Likely a definition */
@@ -22,10 +25,10 @@ static inline void judge_cmdline(char **cmd_line_text)
 
 int main (int argc, char **argv)
 {
-    char **argv_local = argv + 1;
+    char **argv_local = argv + 1;   // Skip the first argument which is the program name   
     int argc_local = argc - 1;
 
-    setvbuf(stdout, nullptr, _IONBF, 0);
+    setvbuf(stdout, nullptr, _IONBF, 0);    // Disable buffering for stdout
     
     while (argc_local--)
         judge_cmdline(argv_local++);

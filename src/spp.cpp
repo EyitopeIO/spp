@@ -25,7 +25,12 @@ bool judge_lines(std::ifstream& reader, std::ofstream& writer);
 if_stack *if_stack_head = nullptr;  
 if_stack *if_stack_tail = nullptr;  // Also the cursor for the innermost ifdef block
 
-
+/**
+ * @brief Create a new if_stack object
+ * 
+ * @param stat the global parser state object
+ * @return a pointer to the new if_stack object
+ */
 static if_stack* create_if_stack(pstate& stat)
 {
     if_stack* ifs = new if_stack;
@@ -37,6 +42,11 @@ static if_stack* create_if_stack(pstate& stat)
     return ifs;
 }
 
+/**
+ * @brief Push an @ref if_stack object onto the stack
+ * 
+ * @param ifs a pointer to the if_stack object to push
+ */
 static void push_if_stack(if_stack* ifs)
 {
     if (!if_stack_head)
@@ -64,6 +74,9 @@ static void push_if_stack(if_stack* ifs)
     }
 }
 
+/**
+ * @brief Pop an @ref if_stack object from the stack
+ */
 static void pop_if_stack(void)
 {
     if (if_stack_tail)
@@ -105,6 +118,7 @@ static int token_len(line_type type)
             return -1;
     }
 }
+
 /**
  * @brief Simplify an annotated line to mean either true or false
  *
@@ -123,6 +137,9 @@ static bool simplify(reader_output* ro)
     
     ro->line.erase(0,token_len(ro->ltype)); // Strip leading annotation
     
+
+    /* If we have a simple ifdef, we can just use a regex to validate the definition
+         and return true if it is found in the hash table; otherwise, we parse */
     std::regex activex("^[a-zA-Z0-9]+[ ]+$",std::regex_constants::extended);
     std::smatch matchx;
     if (std::regex_search(ro->line,matchx,activex))

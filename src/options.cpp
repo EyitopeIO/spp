@@ -2,7 +2,6 @@
 #include "spp.h"
 #include <cstring>
 #include <cstdlib>
-
 #include <unistd.h>
 
 #define INVALIDCMDLINE(text) do { \
@@ -18,6 +17,14 @@ void show_usage(void)
     exit(EXIT_FAILURE);
 }
 
+/**
+ * @brief Add a string to the hash table
+ * 
+ * @details The string is the definition provided on the command line. If -DNAME is provided,
+ *          then NAME is added to the hash table.
+ * 
+ * @param text: the string to add
+ */
 static void add_defines_to_hashtable(char *text)
 {
     std::string s(text);

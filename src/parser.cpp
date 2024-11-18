@@ -8,6 +8,9 @@
 #include <queue>
 
 /*
+
+    The grammar for the parser is as follows:
+
     E ---> (E)
     E ---> E && E
     E ---> E || E
@@ -25,7 +28,8 @@
  * @brief Function to convert input string to an array of tokens
  * 
  * @param input Annotated line read from a file but with annotation stripped.
- * @param tokens A vector to store the tokens
+ * @param tokens A vector to store the tokens. Definitions found in the @ref global_hash_table are marked as 't' and 'f' otherwise.
+ *               After the input has been converted to tokens, the vector may look like this: [ t, &, t, |, f, &, t, (, t, |, f, ) ]
  *
  */
 static void fetch_tokens(std::vector<char>& tokens, const std::string& input)
@@ -39,6 +43,8 @@ static void fetch_tokens(std::vector<char>& tokens, const std::string& input)
     {
         c = input[i];
 
+        /* We have potentially found a valid alphanumeric token, so we read character by character to know when it stops being
+           a valid alphanumeric. */
         if (isalnum(c) || c == '_')
         {
             token += c;
@@ -61,12 +67,14 @@ static void fetch_tokens(std::vector<char>& tokens, const std::string& input)
 
         // cerr_debug_print("[char]: " << c);
 
+        /* Skip all spaces until we find a valid character */
         if (c == ' ')
         {
             while (i < l && ((c = input[i]) == ' '))
                 i++;
         }
         
+        /* For the logical operators, they are always in pairs, so we can check for them together */
         else if ((i+1 < l) && (input[i] == '&') && (input[i+1] == '&'))
         {
             tokens.push_back('&');
@@ -103,14 +111,13 @@ static void fetch_tokens(std::vector<char>& tokens, const std::string& input)
 
 }
 
-
 /**
  * @brief Function to evaluate the reverse polish notation
  * 
- * @param os An empty stack to store the operands.
- * @param oq A queue containing the reverse polish notation.
+ * @param os An empty stack to store the operands in the Shunting-yard algorithm
+ * @param oq A queue containing the reverse polish notation for the algorithm
+ * 
  * @return true if the expression evaluates to true; false otherwise
- *
  */
 static bool evaluate_rpn(std::stack<char>& os, std::queue<char>& oq)
 {
