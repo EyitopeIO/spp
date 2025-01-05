@@ -35,10 +35,6 @@ Install required packages
 sudo apt install cmake libgtest-dev shellcheck g++
 ```
 
-Run `./build` from the root of this project for help on how to build. It is
-a helper script. Alternatively, you may just call `cmake`, but take care not
-to call it in the project root, otherwise cmake files will be scattered about,
-which is annoying to cleanup.if you did so by accident.
-
-Run `./build --help` [yet to be implemented] for how to use this script.
+Run `build` from the root of this project. The executable would be `cbuild/spp`
+Alternatively, you may just call `cmake`. Use `build -h` for help.
 
